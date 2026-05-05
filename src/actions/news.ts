@@ -1,8 +1,6 @@
 "use server";
 
-import { db } from "@/db/db";
-import { newsArticles, sources } from "@/db/schema";
-import { desc, eq, and, gte, ilike } from "drizzle-orm";
+import { createClient } from "@/utils/supabase/server";
 
 interface GetArticlesParams {
     query?: string;
@@ -14,49 +12,77 @@ interface GetArticlesParams {
 export async function getNewsArticles(params: GetArticlesParams) {
     const { query, category, timeRange, limit = 20 } = params;
     
-    // Inisialisasi array kondisi/filter Drizzle
-    const conditions = [];
-
-    // Filter Kategori
-    if (category && category !== "all") {
-        conditions.push(eq(newsArticles.category, category));
-    }
-
-    // Filter Search/Query (Pencarian pada judul atau konten)
-    if (query) {
-        conditions.push(ilike(newsArticles.title, `%${query}%`));
-    }
-
-    // Filter Waktu
-    if (timeRange && timeRange !== "all") {
-        const now = new Date();
-        let pastDate = new Date();
-        
-        switch (timeRange) {
-            case "last-6-hours":
-                pastDate.setHours(now.getHours() - 6);
-                break;
-            case "last-24-hours":
-                pastDate.setHours(now.getHours() - 24);
-                break;
-            case "last-7-days":
-                pastDate.setDate(now.getDate() - 7);
-                break;
-        }
-        
-        conditions.push(gte(newsArticles.publishedAt, pastDate));
-    }
-
-    // Eksekusi Drizzle Query
     try {
-        const articles = await db.query.newsArticles.findMany({
-            where: conditions.length > 0 ? and(...conditions) : undefined,
-            orderBy: [desc(newsArticles.publishedAt)],
-            limit: limit,
-            with: {
-                source: true, // Join tabel sumber (icon & nama sumber)
+        const supabase = await createClient();
+        
+        let dbQuery = supabase
+            .from('news_article')
+            .select(`
+                *,
+                source:source_id (
+                    id,
+                    name,
+                    icon_url
+                )
+            `)
+            .order('published_at', { ascending: false })
+            .limit(limit);
+
+        // Filter Kategori
+        if (category && category !== "all") {
+            dbQuery = dbQuery.eq('category', category);
+        }
+
+        // Filter Search/Query (Pencarian pada judul)
+        if (query) {
+            dbQuery = dbQuery.ilike('title', `%${query}%`);
+        }
+
+        // Filter Waktu
+        if (timeRange && timeRange !== "all") {
+            const now = new Date();
+            let pastDate = new Date();
+            
+            switch (timeRange) {
+                case "last-6-hours":
+                    pastDate.setHours(now.getHours() - 6);
+                    break;
+                case "last-24-hours":
+                    pastDate.setHours(now.getHours() - 24);
+                    break;
+                case "last-7-days":
+                    pastDate.setDate(now.getDate() - 7);
+                    break;
             }
-        });
+            
+            dbQuery = dbQuery.gte('published_at', pastDate.toISOString());
+        }
+
+        const { data, error } = await dbQuery;
+        
+        if (error) {
+            console.error("Supabase Query Error:", error);
+            throw new Error(error.message);
+        }
+
+        // Map camelCase for frontend compatibility
+        const articles = data.map(article => ({
+            id: article.id,
+            title: article.title,
+            slug: article.slug,
+            content: article.content,
+            sourceUrl: article.source_url,
+            imageUrl: article.image_url,
+            category: article.category,
+            sourceId: article.source_id,
+            publishedAt: article.published_at,
+            sentimentScore: article.sentiment_score,
+            source: Array.isArray(article.source) ? article.source[0] : article.source ? {
+                id: (article.source as any).id,
+                name: (article.source as any).name,
+                iconUrl: (article.source as any).icon_url,
+            } : null
+        }));
 
         return { success: true, data: articles };
     } catch (error) {

@@ -27,23 +27,32 @@ export default function NewsFeed({ initialCategory = "all", initialSearch = "" }
         staleTime: 60 * 1000 * 5, // 5 menit cache
     });
 
-    // Dummy Realtime Listener: Ganti setInterval ini dengan Supabase Realtime / SSE
+    // Supabase Realtime Listener
     useEffect(() => {
-        /* 
-        // Contoh Implementasi Supabase Realtime
-        const channel = supabase.channel('realtime_news')
-            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'news_article' }, (payload) => {
-                setHasNewUpdate(true); // Memunculkan tombol "New Update"
-            })
-            .subscribe();
-        return () => supabase.removeChannel(channel);
-        */
+        const fetchRealtime = async () => {
+            const { createClient } = await import('@/utils/supabase/client');
+            const supabase = createClient();
+            
+            const channel = supabase.channel('realtime_news')
+                .on(
+                    'postgres_changes', 
+                    { event: 'INSERT', schema: 'public', table: 'news_article' }, 
+                    (payload) => {
+                        setHasNewUpdate(true); // Memunculkan tombol "New Update"
+                    }
+                )
+                .subscribe();
 
-        // Simulasi berita baru masuk setiap 30 detik untuk demo animasi
-        const timer = setInterval(() => {
-            setHasNewUpdate(true);
-        }, 30000);
-        return () => clearInterval(timer);
+            return () => {
+                supabase.removeChannel(channel);
+            };
+        };
+
+        const cleanupPromise = fetchRealtime();
+        
+        return () => {
+            cleanupPromise.then(cleanup => cleanup());
+        };
     }, []);
 
     const handleRefresh = () => {

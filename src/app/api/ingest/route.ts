@@ -1,7 +1,5 @@
 import { NextResponse } from "next/server";
-import { db } from "@/db/db";
-import { newsArticles } from "@/db/schema";
-import { sql } from "drizzle-orm";
+import { createClient } from "@supabase/supabase-js";
 
 // Secret untuk memproteksi route (hanya bisa dipanggil via cron job atau webhook internal)
 const INGESTION_SECRET = process.env.INGESTION_SECRET;
@@ -32,49 +30,46 @@ export async function POST(req: Request) {
              return NextResponse.json({ message: "No articles provided" });
         }
 
-        // 2. Gunakan Transaction agar proses insert multi-data berjalan atomik
-        const result = await db.transaction(async (tx) => {
-            let insertedCount = 0;
-            let updatedCount = 0;
+        // Initialize Supabase admin client
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+        const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+        
+        if (!supabaseUrl || !supabaseServiceRoleKey) {
+            console.error("Missing Supabase environment variables.");
+            return NextResponse.json({ error: "Server Configuration Error" }, { status: 500 });
+        }
 
-            for (const article of incomingArticles) {
-                // Generate UUID baru atau biarkan Drizzle/Postgres menangani jika ada default
-                const id = crypto.randomUUID(); 
+        const supabase = createClient(supabaseUrl, supabaseServiceRoleKey);
 
-                // 3. Upsert Logic (Deduplikasi berdasarkan sourceUrl)
-                const upsertResult = await tx.insert(newsArticles).values({
-                    id,
-                    title: article.title,
-                    slug: article.slug,
-                    content: article.content,
-                    sourceUrl: article.sourceUrl,
-                    imageUrl: article.imageUrl,
-                    category: article.category,
-                    sourceId: article.sourceId,
-                    publishedAt: new Date(article.publishedAt),
-                    sentimentScore: Math.floor(Math.random() * 100), // Dummy sentiment
-                })
-                .onConflictDoUpdate({
-                    target: newsArticles.sourceUrl, // Konflik di URL yang unik
-                    set: {
-                        title: article.title,
-                        content: article.content,
-                        imageUrl: article.imageUrl,
-                        // updatedAt: sql`NOW()`, // Jika ada kolom updatedAt
-                    }
-                }).returning({ id: newsArticles.id });
+        // Prepare data for upsert
+        const articlesToUpsert = incomingArticles.map((article) => ({
+            id: crypto.randomUUID(),
+            title: article.title,
+            slug: article.slug,
+            content: article.content,
+            source_url: article.sourceUrl, // Maps to source_url in DB
+            image_url: article.imageUrl,
+            category: article.category,
+            source_id: article.sourceId,
+            published_at: new Date(article.publishedAt).toISOString(),
+            sentiment_score: Math.floor(Math.random() * 100),
+        }));
 
-                if (upsertResult.length > 0) {
-                    insertedCount++; // Asumsi sukses (bisa lebih detail mendeteksi insert/update)
-                }
-            }
+        // 2. Upsert using Supabase
+        // onConflict: "source_url" ensures we deduplicate on sourceUrl
+        const { data, error } = await supabase
+            .from('news_article')
+            .upsert(articlesToUpsert, { onConflict: 'source_url' })
+            .select();
 
-            return { insertedCount, updatedCount };
-        });
+        if (error) {
+            console.error("Supabase Upsert Error:", error);
+            throw new Error(error.message);
+        }
 
         return NextResponse.json({ 
             success: true, 
-            message: `Ingestion complete. Processed ${result.insertedCount} articles.` 
+            message: `Ingestion complete. Processed ${data?.length || 0} articles.` 
         });
 
     } catch (error) {

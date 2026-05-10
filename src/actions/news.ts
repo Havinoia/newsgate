@@ -33,9 +33,9 @@ export async function getNewsArticles(params: GetArticlesParams) {
             dbQuery = dbQuery.eq('category', category);
         }
 
-        // Filter Search/Query (Pencarian pada judul)
+        // Broad Search/Query (Search in title or content)
         if (query) {
-            dbQuery = dbQuery.ilike('title', `%${query}%`);
+            dbQuery = dbQuery.or(`title.ilike.%${query}%,content.ilike.%${query}%`);
         }
 
         // Filter Waktu

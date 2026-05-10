@@ -1,12 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getNewsArticles } from "@/actions/news";
 import { motion, AnimatePresence } from "framer-motion";
-import { Clock, TrendingUp, ExternalLink } from "lucide-react";
-// Asumsi ada setup client supabase sederhana di proyek ini:
-// import { supabase } from "@/lib/supabase";
+import { createClient } from "@/utils/supabase/client";
 
 interface NewsFeedProps {
     initialCategory?: string;
@@ -14,8 +12,6 @@ interface NewsFeedProps {
 }
 
 export default function NewsFeed({ initialCategory = "all", initialSearch = "" }: NewsFeedProps) {
-    const [hasNewUpdate, setHasNewUpdate] = useState(false);
-
     // TanStack Query untuk fetching data
     const { data: articles, refetch, isLoading } = useQuery({
         queryKey: ["articles", initialCategory, initialSearch],
@@ -29,140 +25,158 @@ export default function NewsFeed({ initialCategory = "all", initialSearch = "" }
 
     // Supabase Realtime Listener
     useEffect(() => {
-        const fetchRealtime = async () => {
-            const { createClient } = await import('@/utils/supabase/client');
-            const supabase = createClient();
-            
-            const channel = supabase.channel('realtime_news')
-                .on(
-                    'postgres_changes', 
-                    { event: 'INSERT', schema: 'public', table: 'news_article' }, 
-                    (payload) => {
-                        setHasNewUpdate(true); // Memunculkan tombol "New Update"
-                    }
-                )
-                .subscribe();
-
-            return () => {
-                supabase.removeChannel(channel);
-            };
-        };
-
-        const cleanupPromise = fetchRealtime();
+        const supabase = createClient();
         
+        const channel = supabase.channel(`realtime_news_${initialCategory}`)
+            .on(
+                'postgres_changes', 
+                { event: 'INSERT', schema: 'public', table: 'news_article' }, 
+                () => {
+                    refetch();
+                }
+            )
+            .subscribe();
+
         return () => {
-            cleanupPromise.then(cleanup => cleanup());
+            supabase.removeChannel(channel);
         };
-    }, []);
+    }, [initialCategory, refetch]);
 
-    const handleRefresh = () => {
-        refetch();
-        setHasNewUpdate(false);
-    };
+    if (isLoading) return <div className="text-center py-20 text-on-surface-variant font-body-md animate-pulse">Connecting to the news center...</div>;
 
-    if (isLoading) return <div className="text-center py-20 text-gray-500 animate-pulse">Memuat berita terbaru...</div>;
+    if (!articles || articles.length === 0) {
+        return <div className="text-center py-20 text-on-surface-variant font-body-md">No news found for this category.</div>;
+    }
+
+    const breakingStory = articles[0];
+    const sideStories = articles.slice(1, 3);
+    const trendingStories = articles.slice(3);
 
     return (
-        <div className="max-w-6xl mx-auto w-full relative">
-            {/* Animasi "New Updates Available" */}
-            <AnimatePresence>
-                {hasNewUpdate && (
-                    <motion.div
-                        initial={{ opacity: 0, y: -20 }}
+        <div className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop">
+            {/* Hero Bento Grid Section */}
+            <section className="grid grid-cols-1 md:grid-cols-12 gap-bento-gap mb-16">
+                {/* Breaking Story (Large Card) */}
+                {breakingStory && (
+                    <motion.a 
+                        href={breakingStory.sourceUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -20 }}
-                        className="fixed top-24 left-1/2 -translate-x-1/2 z-50"
+                        className="md:col-span-8 group relative overflow-hidden rounded-xl bg-surface-container-high bento-card-glow breaking-news-glow aspect-video md:aspect-auto md:h-[600px] transition-transform duration-500 hover:scale-[1.01]"
                     >
-                        <button 
-                            onClick={handleRefresh}
-                            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-full shadow-xl shadow-blue-500/30 font-medium flex items-center gap-2 transition-all"
-                        >
-                            <TrendingUp className="w-4 h-4" />
-                            Berita Baru Tersedia
-                        </button>
-                    </motion.div>
-                )}
-            </AnimatePresence>
+                        <img 
+                            className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-700" 
+                            src={breakingStory.imageUrl || "https://picsum.photos/seed/breaking/1200/800"} 
+                            alt={breakingStory.title}
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent"></div>
+                        
+                        <div className="absolute top-6 left-6 flex items-center gap-2">
+                            <span className="flex h-3 w-3 relative">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-secondary opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-3 w-3 bg-secondary"></span>
+                            </span>
+                            <span className="font-label-caps text-xs font-semibold text-secondary tracking-widest uppercase">LIVE UPDATE</span>
+                        </div>
 
-            {/* Grid Layout untuk Berita (Bento/Masonry Style) */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-6">
-                <AnimatePresence>
-                    {articles?.map((article, index) => (
-                        <motion.a
+                        <div className="absolute bottom-0 left-0 p-8 w-full">
+                            <p className="font-label-caps text-xs font-bold text-secondary mb-3 uppercase tracking-widest">{breakingStory.category}</p>
+                            <h1 className="font-display-xl text-3xl md:text-5xl font-black text-on-surface mb-4 max-w-2xl leading-tight">
+                                {breakingStory.title}
+                            </h1>
+                            <div className="flex items-center gap-4 text-on-surface-variant font-data-point text-xs">
+                                <span className="font-medium uppercase tracking-wider">{breakingStory.source?.name} • {new Date(breakingStory.publishedAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })} EST</span>
+                                <span className="flex items-center gap-1">
+                                    <span className="material-symbols-outlined text-[16px]">visibility</span> {Math.floor(Math.random() * 20)}k
+                                </span>
+                            </div>
+                        </div>
+                    </motion.a>
+                )}
+
+                {/* Side Bento Column */}
+                <div className="md:col-span-4 flex flex-col gap-bento-gap">
+                    {sideStories.map((article) => (
+                        <motion.a 
+                            key={article.id}
                             href={article.sourceUrl}
                             target="_blank"
                             rel="noopener noreferrer"
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            className="flex-1 group relative overflow-hidden rounded-xl bg-surface-container-high bento-card-glow transition-transform duration-500 hover:scale-[1.02]"
+                        >
+                            <img 
+                                className="absolute inset-0 w-full h-full object-cover opacity-40 group-hover:scale-105 transition-transform duration-700" 
+                                src={article.imageUrl || "https://picsum.photos/seed/side/600/400"} 
+                                alt={article.title}
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-surface-container-high to-transparent"></div>
+                            <div className="absolute bottom-0 p-6">
+                                <p className="font-label-caps text-[10px] font-bold text-on-surface-variant mb-2 uppercase tracking-widest">{article.category}</p>
+                                <h2 className="font-headline-md text-lg font-bold text-on-surface line-clamp-2">{article.title}</h2>
+                                <p className="font-data-point text-[10px] text-on-surface-variant mt-2 uppercase tracking-wider">
+                                    {article.source?.name} • {new Date(article.publishedAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })} EST
+                                </p>
+                            </div>
+                        </motion.a>
+                    ))}
+                </div>
+            </section>
+
+            {/* Secondary Feed Header */}
+            <div className="flex items-center justify-between mb-8 border-b border-outline-variant pb-4">
+                <h3 className="font-headline-lg text-2xl font-extrabold text-on-surface tracking-tighter uppercase">Trending Today</h3>
+                <div className="flex gap-2">
+                    <button className="p-2 rounded-full border border-outline-variant hover:bg-white/5 transition-colors">
+                        <span className="material-symbols-outlined">chevron_left</span>
+                    </button>
+                    <button className="p-2 rounded-full border border-outline-variant hover:bg-white/5 transition-colors">
+                        <span className="material-symbols-outlined">chevron_right</span>
+                    </button>
+                </div>
+            </div>
+
+            {/* Content Feed Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-gutter">
+                <AnimatePresence mode="popLayout">
+                    {trendingStories.map((article) => (
+                        <motion.a 
                             key={article.id}
+                            href={article.sourceUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            layout
                             initial={{ opacity: 0, scale: 0.95 }}
                             animate={{ opacity: 1, scale: 1 }}
-                            transition={{ delay: index * 0.05 }}
-                            layout
-                            className={`group relative flex flex-col bg-white dark:bg-zinc-900 rounded-3xl overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-300 border border-zinc-100 dark:border-zinc-800 ${
-                                index === 0 ? "md:col-span-2 md:row-span-2" : "" // Berita utama lebih besar
-                            }`}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            className="flex flex-col gap-4 group"
                         >
-                            {/* Gambar Cover */}
-                            <div className="relative w-full aspect-video overflow-hidden bg-zinc-100 dark:bg-zinc-800">
-                                {article.imageUrl ? (
-                                    <img 
-                                        src={article.imageUrl} 
-                                        alt={article.title} 
-                                        className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500"
-                                    />
-                                ) : (
-                                    <div className="flex items-center justify-center w-full h-full text-zinc-400">No Image</div>
-                                )}
-                                {/* Gradient Overlay */}
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-80" />
-                                
-                                {/* Kategori Badge */}
-                                <span className="absolute top-4 left-4 bg-white/20 backdrop-blur-md border border-white/30 text-white text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-wider">
+                            <div className="relative aspect-[4/3] overflow-hidden rounded-xl bg-surface-container bento-card-glow">
+                                <img 
+                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                                    src={article.imageUrl || "https://picsum.photos/seed/feed/400/300"} 
+                                    alt={article.title}
+                                />
+                                <div className="absolute top-3 left-3 bg-background/60 backdrop-blur-md px-2 py-1 rounded text-[10px] font-bold text-on-surface uppercase tracking-widest">
                                     {article.category}
-                                </span>
-                            </div>
-
-                            {/* Konten */}
-                            <div className="p-6 flex-1 flex flex-col justify-between absolute bottom-0 w-full z-10 text-white">
-                                <div>
-                                    <h2 className={`font-bold leading-tight tracking-tight drop-shadow-md ${
-                                        index === 0 ? "text-2xl md:text-3xl lg:text-4xl" : "text-xl"
-                                    } group-hover:text-blue-300 transition-colors line-clamp-3`}>
-                                        {article.title}
-                                    </h2>
-                                </div>
-                                
-                                {/* Metadata Source & Time */}
-                                <div className="mt-4 flex items-center justify-between text-sm text-zinc-300">
-                                    <div className="flex items-center gap-2">
-                                        {article.source?.iconUrl ? (
-                                            <img src={article.source.iconUrl} className="w-5 h-5 rounded-full" alt="source" />
-                                        ) : (
-                                            <div className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center text-[10px] font-bold text-white">
-                                                {article.source?.name.charAt(0)}
-                                            </div>
-                                        )}
-                                        <span className="font-medium text-white drop-shadow-sm">{article.source?.name || "Unknown Source"}</span>
-                                    </div>
-                                    <div className="flex items-center gap-1 opacity-80">
-                                        <Clock className="w-3.5 h-3.5" />
-                                        <span>
-                                            {new Intl.DateTimeFormat("id-ID", { hour: '2-digit', minute: '2-digit' }).format(new Date(article.publishedAt))}
-                                        </span>
-                                    </div>
                                 </div>
                             </div>
-                            
-                            {/* Hover Icon Ext */}
-                            <div className="absolute top-4 right-4 bg-black/50 p-2 rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm">
-                                <ExternalLink className="w-4 h-4" />
+                            <div className="flex flex-col gap-2">
+                                <h4 className="font-headline-md text-base font-bold text-on-surface group-hover:text-secondary transition-colors line-clamp-2">
+                                    {article.title}
+                                </h4>
+                                <div className="flex justify-between items-center font-data-point text-[10px] text-on-surface-variant uppercase tracking-wider">
+                                    <span>{article.source?.name}</span>
+                                    <span>{new Date(article.publishedAt).toLocaleDateString('en-US', { day: 'numeric', month: 'short' })}</span>
+                                </div>
                             </div>
                         </motion.a>
                     ))}
                 </AnimatePresence>
             </div>
-            {articles?.length === 0 && (
-                <div className="text-center py-20 text-gray-500">Tidak ada berita yang ditemukan.</div>
-            )}
         </div>
     );
 }

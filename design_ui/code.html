@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="id"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800;900&amp;family=Work+Sans:wght@400;500&amp;family=JetBrains+Mono:wght@500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .bento-card-glow {
+            box-shadow: inset 0 1px 1px 0 rgba(255, 255, 255, 0.1);
+        }
+        .breaking-news-glow {
+            box-shadow: inset 0 1px 1px 0 rgba(0, 83, 219, 0.3);
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "outline": "#988e90",
+                      "on-error": "#690005",
+                      "on-tertiary": "#1d00a5",
+                      "on-tertiary-fixed-variant": "#3323cc",
+                      "secondary-fixed": "#dbe1ff",
+                      "primary-fixed": "#e2e2e2",
+                      "surface-container-high": "#2a2a2d",
+                      "surface-container": "#1f1f22",
+                      "tertiary": "#c3c0ff",
+                      "outline-variant": "#4c4546",
+                      "surface-variant": "#353438",
+                      "tertiary-container": "#000000",
+                      "on-surface-variant": "#cfc4c5",
+                      "tertiary-fixed-dim": "#c3c0ff",
+                      "surface-bright": "#39393c",
+                      "on-secondary-container": "#cdd7ff",
+                      "on-tertiary-container": "#655efb",
+                      "surface-container-highest": "#353438",
+                      "on-surface": "#e4e1e6",
+                      "surface-container-low": "#1b1b1e",
+                      "secondary-container": "#0053db",
+                      "background": "#131316",
+                      "on-tertiary-fixed": "#0f0069",
+                      "tertiary-fixed": "#e2dfff",
+                      "on-error-container": "#ffdad6",
+                      "surface-tint": "#c6c6c6",
+                      "surface-container-lowest": "#0e0e11",
+                      "on-secondary-fixed": "#00174b",
+                      "on-secondary-fixed-variant": "#003ea8",
+                      "inverse-on-surface": "#303033",
+                      "error": "#ffb4ab",
+                      "surface-dim": "#131316",
+                      "secondary-fixed-dim": "#b4c5ff",
+                      "secondary": "#b4c5ff",
+                      "error-container": "#93000a",
+                      "on-primary-fixed": "#1b1b1b",
+                      "primary-fixed-dim": "#c6c6c6",
+                      "on-secondary": "#002a78",
+                      "inverse-surface": "#e4e1e6",
+                      "primary-container": "#000000",
+                      "on-primary": "#303030",
+                      "surface": "#131316",
+                      "on-primary-fixed-variant": "#474747",
+                      "inverse-primary": "#5e5e5e",
+                      "on-primary-container": "#757575",
+                      "primary": "#c6c6c6",
+                      "on-background": "#e4e1e6"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "margin-desktop": "48px",
+                      "bento-gap": "16px",
+                      "container-max": "1440px",
+                      "margin-mobile": "16px",
+                      "section-padding": "64px",
+                      "gutter": "24px"
+              },
+              "fontFamily": {
+                      "headline-lg": ["Inter"],
+                      "body-md": ["Work Sans"],
+                      "label-caps": ["JetBrains Mono"],
+                      "body-lg": ["Work Sans"],
+                      "headline-md": ["Inter"],
+                      "display-xl": ["Inter"],
+                      "data-point": ["JetBrains Mono"],
+                      "headline-lg-mobile": ["Inter"]
+              },
+              "fontSize": {
+                      "headline-lg": ["32px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "800"}],
+                      "body-md": ["16px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                      "label-caps": ["12px", {"lineHeight": "1", "letterSpacing": "0.1em", "fontWeight": "600"}],
+                      "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                      "headline-md": ["20px", {"lineHeight": "1.3", "fontWeight": "700"}],
+                      "display-xl": ["64px", {"lineHeight": "1.1", "letterSpacing": "-0.04em", "fontWeight": "900"}],
+                      "data-point": ["14px", {"lineHeight": "1", "fontWeight": "500"}],
+                      "headline-lg-mobile": ["24px", {"lineHeight": "1.2", "fontWeight": "800"}]
+              }
+            },
+          },
+        }
+    </script>
+</head>
+<body class="bg-background text-on-surface selection:bg-secondary-container selection:text-on-secondary-container antialiased">
+<!-- TopNavBar -->
+<header class="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-xl border-b border-white/10 shadow-2xl shadow-black/50">
+<div class="flex justify-between items-center h-16 px-margin-desktop max-w-container-max mx-auto">
+<div class="flex items-center gap-8">
+<a class="font-headline-lg text-headline-lg font-extrabold tracking-tighter text-on-surface" href="#">NewsGate</a>
+<nav class="hidden md:flex items-center gap-6">
+<a class="font-headline-md text-headline-md font-bold text-primary border-b-2 border-primary pb-1" href="#">Teknologi</a>
+<a class="font-headline-md text-headline-md text-on-surface-variant hover:text-on-surface transition-colors" href="#">Bisnis</a>
+<a class="font-headline-md text-headline-md text-on-surface-variant hover:text-on-surface transition-colors" href="#">Politik</a>
+<a class="font-headline-md text-headline-md text-on-surface-variant hover:text-on-surface transition-colors" href="#">Olahraga</a>
+<a class="font-headline-md text-headline-md text-on-surface-variant hover:text-on-surface transition-colors" href="#">Hiburan</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 hover:bg-white/5 transition-all duration-300 rounded-full active:scale-95 text-on-surface-variant">
+<span class="material-symbols-outlined">search</span>
+</button>
+<button class="p-2 hover:bg-white/5 transition-all duration-300 rounded-full active:scale-95 text-on-surface-variant">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<div class="w-8 h-8 rounded-full bg-surface-variant overflow-hidden border border-outline-variant">
+<img alt="User Profile" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDyaSQQX20OVKMVMj1dhSkZlR_Q87Enn1VmaTHDvQsx6ud5bf2fSEVpdx7eXPK0VHuUmPNeXw55-BxY4ZNLv_eu5qBr0Phg_dgCU_AW0ik-CUtRrv686xVApsHd9jLDyLRxzz33bpP96rT3alkJX9YMsvUGcVsxMeJYjYBe3oYGc0jvaFU61dbOQ4O-ZtDKouXcSOoCgiZFxCtQoosYEJ8Fmai5y4G3qYQjeqvbTOYobyXh5ckF6tgKI8qfCH2k8brvBho5yGrlUgg"/>
+</div>
+</div>
+</div>
+</header>
+<main class="pt-24 pb-section-padding px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto">
+<!-- Hero Bento Grid Section -->
+<section class="grid grid-cols-1 md:grid-cols-12 gap-bento-gap mb-16">
+<!-- Breaking Story (Large Card) -->
+<div class="md:col-span-8 group relative overflow-hidden rounded-xl bg-surface-container-high bento-card-glow breaking-news-glow aspect-video md:aspect-auto md:h-[600px] transition-transform duration-500 hover:scale-[1.01]">
+<img class="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-700" data-alt="A cinematic, high-angle shot of a futuristic neon-lit server room with glowing electric blue cables and data streams pulsing through the air. The atmosphere is dark and sophisticated, with deep shadows and reflective glass surfaces. This image represents high-end technological advancement with a professional terminal-like aesthetic, using a palette of deep blacks and electric blue highlights." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBxkG2U0NA2jTgY-Au69jdvC_7fjNGfNPMpkCoduDxNLqftbx34bwMc5tU4H6qAvP4ORNISN4fJBbS6Ua6gRcXCJpzPkdXc9mh3oix5nbEVJhydTXblzqftuRypDDQBTVaoxQy5BuULpCqZb1lBQXWekxahpxxOy_EOZ3COdxQpJVttgGXbFH94-HUF385lOQORe_E629O-TcQe3HMFUtdZqWzKhUv66LqXVn6y6ZMprjQ5KqPiKhXMGF0-UloLuKmSSTBHHZ6eBgQ"/>
+<div class="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent"></div>
+<div class="absolute top-6 left-6 flex items-center gap-2">
+<span class="flex h-3 w-3 relative">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-secondary opacity-75"></span>
+<span class="relative inline-flex rounded-full h-3 w-3 bg-secondary"></span>
+</span>
+<span class="font-label-caps text-label-caps text-secondary">LIVE</span>
+</div>
+<div class="absolute bottom-0 left-0 p-8 w-full">
+<p class="font-label-caps text-label-caps text-secondary mb-3">TEKNOLOGI</p>
+<h1 class="font-display-xl text-display-xl text-on-surface mb-4 max-w-2xl leading-tight">Masa Depan AI: Bagaimana Neural Network Mengubah Lanskap Ekonomi Global 2024</h1>
+<div class="flex items-center gap-4 text-on-surface-variant font-data-point text-data-point">
+<span>Reuters • 12:45 WIB</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">visibility</span> 12.5k</span>
+</div>
+</div>
+</div>
+<!-- Side Bento Column -->
+<div class="md:col-span-4 flex flex-col gap-bento-gap">
+<!-- Side Card 1 -->
+<div class="flex-1 group relative overflow-hidden rounded-xl bg-surface-container-high bento-card-glow transition-transform duration-500 hover:scale-[1.02]">
+<img class="absolute inset-0 w-full h-full object-cover opacity-40 group-hover:scale-105 transition-transform duration-700" data-alt="Close-up of a high-resolution trading terminal showing complex stock market charts and data visualizations in a dark, professional setting. The lighting is low-key with glowing indigo and electric blue accents on the graphs. The mood is urgent and precise, capturing the atmosphere of a global financial hub with cinematic clarity and modern modular UI design." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDsUfSTtbumQexIQeOFOb_HJ6Y7N7VT-6BfMoaxUwSYet-6WhpWtXWAbiDh5eM2XSYNmbuz82xS4qwre-6TjcCi861O23Qy_MMr4jBn_meJCpL_K_3L_GvCyqoLeybfNjjkMqbs9shWwJVD2p4NJycmbh17puO_f2ADgr5OCnL5qjQ8csKJjUyCryllO4UYpM208WVgJSaM-USl4vpP45lLz4QmZhtjtbn3qjr1aZd26vNOwH02ITtyBcj6uvjOFbDBzi5MohXKTeg"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container-high to-transparent"></div>
+<div class="absolute bottom-0 p-6">
+<p class="font-label-caps text-label-caps text-on-surface-variant mb-2">BISNIS</p>
+<h2 class="font-headline-md text-headline-md text-on-surface">Pasar Global Menanti Keputusan Suku Bunga Federal Reserve Malam Ini</h2>
+<p class="font-data-point text-data-point text-on-surface-variant mt-2">Bloomberg • 14:20 WIB</p>
+</div>
+</div>
+<!-- Side Card 2 -->
+<div class="flex-1 group relative overflow-hidden rounded-xl bg-surface-container-high bento-card-glow transition-transform duration-500 hover:scale-[1.02]">
+<img class="absolute inset-0 w-full h-full object-cover opacity-40 group-hover:scale-105 transition-transform duration-700" data-alt="A grand, architectural shot of a modern government building facade at twilight, illuminated by soft, cinematic uplighting. The design is minimalist and imposing, with strong geometric lines. The color palette is composed of cool greys and deep zinc blacks, evoking a sense of political authority and transparency in a high-definition, professional media style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBxOTJ7rGpuiVzGIKL4ikKzh86pcxWP8btmMvpZQpvZGYt40-uO10u5Lq3uxnj9INzSki3ywzza2ErY8XZau2huZqKxBFmCH2tpo8z0nKBCoEJmkx7SEKdh1torAmLMWHSDV85M7j2_YrM3uPZOx8WB9zV94KmbB8Qky-UQ1d589CjzpFnfUa6B0ZslC4K8gKY-baQKHBmeb2RtfIHM2KHBXTOU-BuM5Rc4ya7UhBwaqsM6AijSOx3_eAH43lgz5Y46VN4_VC0cN1A"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container-high to-transparent"></div>
+<div class="absolute bottom-0 p-6">
+<p class="font-label-caps text-label-caps text-on-surface-variant mb-2">POLITIK</p>
+<h2 class="font-headline-md text-headline-md text-on-surface">Analisis Debat Capres: Visi Infrastruktur dan Digitalisasi Nasional</h2>
+<p class="font-data-point text-data-point text-on-surface-variant mt-2">Antara • 15:10 WIB</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Secondary Feed Header -->
+<div class="flex items-center justify-between mb-8 border-b border-outline-variant pb-4">
+<h3 class="font-headline-lg text-headline-lg text-on-surface">Trending Hari Ini</h3>
+<div class="flex gap-2">
+<button class="p-2 rounded-full border border-outline-variant hover:bg-white/5 transition-colors">
+<span class="material-symbols-outlined">chevron_left</span>
+</button>
+<button class="p-2 rounded-full border border-outline-variant hover:bg-white/5 transition-colors">
+<span class="material-symbols-outlined">chevron_right</span>
+</button>
+</div>
+</div>
+<!-- Content Feed Grid -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-gutter">
+<!-- News Card 1 -->
+<div class="flex flex-col gap-4 group">
+<div class="relative aspect-[4/3] overflow-hidden rounded-xl bg-surface-container bento-card-glow">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="High-tech cybersecurity visual showing intricate patterns of glowing data nodes and encrypted connections over a dark background. The scene is illuminated with sharp indigo and violet lights, suggesting a high-stakes digital security environment. The style is cinematic and ultra-modern, perfect for a professional news publication focused on deep-tech reporting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCwBrtU51mvENbjPGt8gp92h-v2FFSuQzvsMzhWbwCXcspzRT16u45cLPpsDct3e4PSlkUrXHnFFtgRSQ4gVg5hJvfAtEKUCHnfIFFImgnLXZ-B6mafBT7CWrCNHSDHQGgzKWHcm0Mdkr34inG47ydYXz5ojgDfTkJLVySsoGLH38eTC_SK6zMp031G8sPkirzh87byADLxGmIonEORwtfBjcPiUmz15coah-CBsXnJf5incDibiy3344gKrC6BjAZ9Fnec67xgaa8"/>
+<div class="absolute top-3 left-3 bg-background/60 backdrop-blur-md px-2 py-1 rounded text-[10px] font-label-caps text-on-surface">TEKNO</div>
+</div>
+<div class="flex flex-col gap-2">
+<h4 class="font-headline-md text-headline-md text-on-surface group-hover:text-secondary transition-colors">Serangan Siber Terbaru Targetkan Infrastruktur Cloud Global</h4>
+<div class="flex justify-between items-center font-data-point text-data-point text-on-surface-variant">
+<span>The Verge</span>
+<span>1 jam yang lalu</span>
+</div>
+</div>
+</div>
+<!-- News Card 2 -->
+<div class="flex flex-col gap-4 group">
+<div class="relative aspect-[4/3] overflow-hidden rounded-xl bg-surface-container bento-card-glow">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="A dynamic, low-angle shot of a professional track athlete mid-sprint, with motion blur capturing the intensity of speed. The setting is a futuristic stadium with sharp architectural lines and cool stadium lighting. The atmosphere is energetic and cinematic, rendered in high contrast with a focus on human achievement and precision sports analytics style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBJR_r75X_NCiYCK6WwnFeEezz1e1DBd9wDMwPNyO8zABzAFHxj2ZUc-HuYMpNIfdyhlzm8apbxzxBr4MfwengUv1-xssBmFZI1YO5EQLaW4pHhHZHDmTcbbi_VNbz2PK0E3gA-rlj9ql-9ojsNIGc_J946kjoUipBnpYqq0ozaH9hjP44sCsCgPBuVBWhEZDPB1RJRtGodiNQ318kAu7-e0YQk3ypiXGU5TVm5_glEOx9pCfjBuc-ZoOHBpFlo_lDYLkHtzpC_tig"/>
+<div class="absolute top-3 left-3 bg-background/60 backdrop-blur-md px-2 py-1 rounded text-[10px] font-label-caps text-on-surface">OLAHRAGA</div>
+</div>
+<div class="flex flex-col gap-2">
+<h4 class="font-headline-md text-headline-md text-on-surface group-hover:text-secondary transition-colors">Persiapan Atlet Nasional Menuju Olimpiade Paris 2024</h4>
+<div class="flex justify-between items-center font-data-point text-data-point text-on-surface-variant">
+<span>ESPN</span>
+<span>3 jam yang lalu</span>
+</div>
+</div>
+</div>
+<!-- News Card 3 -->
+<div class="flex flex-col gap-4 group">
+<div class="relative aspect-[4/3] overflow-hidden rounded-xl bg-surface-container bento-card-glow">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="A sophisticated live music performance venue with dramatic, cinematic stage lighting casting deep shadows and warm amber glows. The scene captures the professional atmosphere of high-end entertainment journalism, using a darkroom aesthetic that emphasizes clarity and high-definition detail in a modular, bento-grid inspired visual layout." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDYO1a-9kbs8BJRbDs37plzTFZAlhuma7wJ3xT2CNhbl3Sih5qgiH5FOkHCAO64LJnyUADglyzpETjZoOEpmCi4AEuf37JnH0KhrGQVMPfXgr0lCsmMisVySBXnAg8tfUyQEtxHvXShhbk6SHjj11cSBsHH-iROL2QyXdIICV3-tutj1LBGHFMZicV_KcXv0pKEaGl_PT_X4q6Jihv21SQm1Rpz4UbR36BOMPBOaUlmA64bypgRUmB4hSsXghsFr8ffDPRba_WHiT0"/>
+<div class="absolute top-3 left-3 bg-background/60 backdrop-blur-md px-2 py-1 rounded text-[10px] font-label-caps text-on-surface">HIBURAN</div>
+</div>
+<div class="flex flex-col gap-2">
+<h4 class="font-headline-md text-headline-md text-on-surface group-hover:text-secondary transition-colors">Konser Tur Dunia 2024: Tren Baru Industri Hiburan Digital</h4>
+<div class="flex justify-between items-center font-data-point text-data-point text-on-surface-variant">
+<span>Variety</span>
+<span>5 jam yang lalu</span>
+</div>
+</div>
+</div>
+<!-- News Card 4 -->
+<div class="flex flex-col gap-4 group">
+<div class="relative aspect-[4/3] overflow-hidden rounded-xl bg-surface-container bento-card-glow">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Detailed macro shot of a sleek, dark cryptocurrency hardware wallet next to a screen displaying encrypted blockchain transactions. The lighting is focused and professional, highlighting textures of brushed metal and glass. This image conveys a sense of high-end financial security and technological sophistication within a darkroom media aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDNHe-5PIjvSC1bySXRtwcALnjPOPpHucQZ0sfqML4ma2SSqq3PNh7t21DlIrfvyb7RrtvFUdQx9GoumbGIX3_k8W4oniyxUiqJEhi0y2R3JhcqotwmnWjoJ1n-76TbGhzh1FrZ-SElOWPlAqi1S1XYjPPCKSegqS9Rgp7Arw10hVZX-XaW7K_NMLuJf2GlPtwk86dDCGDhbTet2BPiO8rYZrHP6di4x91tGah5qrY4qlL2_t4ZW3nH2cWIxGA1Wcy3kVNZV_0KArw"/>
+<div class="absolute top-3 left-3 bg-background/60 backdrop-blur-md px-2 py-1 rounded text-[10px] font-label-caps text-on-surface">BISNIS</div>
+</div>
+<div class="flex flex-col gap-2">
+<h4 class="font-headline-md text-headline-md text-on-surface group-hover:text-secondary transition-colors">Adopsi Blockchain Meningkat di Sektor Perbankan Asia</h4>
+<div class="flex justify-between items-center font-data-point text-data-point text-on-surface-variant">
+<span>Nikkei</span>
+<span>6 jam yang lalu</span>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Footer -->
+<footer class="bg-surface-container-lowest border-t border-outline-variant w-full py-section-padding">
+<div class="flex flex-col md:flex-row justify-between items-start gap-gutter px-margin-desktop max-w-container-max mx-auto">
+<div class="flex flex-col gap-6 max-w-sm">
+<span class="font-headline-md text-headline-md font-black text-on-surface">NewsGate</span>
+<p class="font-body-md text-body-md text-on-surface-variant">Platform berita terdepan yang menghadirkan informasi akurat, mendalam, dan real-time untuk pembaca modern. Bloomberg for Everyone.</p>
+<div class="flex gap-4">
+<a class="text-on-surface-variant hover:text-primary transition-colors" href="#"><span class="material-symbols-outlined">public</span></a>
+<a class="text-on-surface-variant hover:text-primary transition-colors" href="#"><span class="material-symbols-outlined">share</span></a>
+<a class="text-on-surface-variant hover:text-primary transition-colors" href="#"><span class="material-symbols-outlined">mail</span></a>
+</div>
+</div>
+<div class="grid grid-cols-2 md:grid-cols-3 gap-12">
+<div class="flex flex-col gap-4">
+<span class="font-label-caps text-label-caps text-primary">PERUSAHAAN</span>
+<nav class="flex flex-col gap-2">
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary hover:underline transition-colors" href="#">About</a>
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary hover:underline transition-colors" href="#">Sources</a>
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary hover:underline transition-colors" href="#">Newsroom</a>
+</nav>
+</div>
+<div class="flex flex-col gap-4">
+<span class="font-label-caps text-label-caps text-primary">LEGAL</span>
+<nav class="flex flex-col gap-2">
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary hover:underline transition-colors" href="#">Privacy Policy</a>
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary hover:underline transition-colors" href="#">Terms of Service</a>
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary hover:underline transition-colors" href="#">Editorial Guidelines</a>
+</nav>
+</div>
+</div>
+</div>
+<div class="mt-16 px-margin-desktop max-w-container-max mx-auto pt-8 border-t border-outline-variant/30 flex flex-col md:flex-row justify-between gap-4">
+<p class="font-body-md text-body-md text-on-surface-variant">© 2024 NewsGate Global. Bloomberg for Everyone.</p>
+<div class="flex gap-6">
+<span class="font-data-point text-data-point text-on-surface-variant">Bahasa Indonesia</span>
+<span class="font-data-point text-data-point text-on-surface-variant">UTC +7:00</span>
+</div>
+</div>
+</footer>
+</body></html>

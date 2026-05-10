@@ -1,13 +1,17 @@
 import "./globals.css";
-import { Inter } from "next/font/google";
+import { Inter, Work_Sans, JetBrains_Mono } from "next/font/google";
 import Providers from "@/components/Providers";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
+const workSans = Work_Sans({ subsets: ["latin"], variable: "--font-work-sans" });
+const jetBrainsMono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-jetbrains-mono" });
 
 export const metadata = {
   title: "NewsGate - Real-time News Aggregator",
-  description: "Platform agregator berita real-time dengan desain premium.",
+  description: "A premium real-time news aggregation platform. Bloomberg for Everyone.",
 };
+
+import Navbar from "@/components/Navbar";
 
 export default function RootLayout({
   children,
@@ -15,31 +19,57 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="id" className="dark">
-      <body className={`${inter.variable} font-sans bg-zinc-50 dark:bg-black text-zinc-900 dark:text-zinc-100 antialiased min-h-screen`}>
+    <html lang="en" className="dark">
+      <head>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" />
+      </head>
+      <body className={`${inter.variable} ${workSans.variable} ${jetBrainsMono.variable} font-sans bg-background text-on-surface antialiased min-h-screen`}>
         <Providers>
-            {/* Header / Navbar Navigasi Ringan */}
-            <header className="sticky top-0 z-40 w-full backdrop-blur-xl bg-white/70 dark:bg-black/70 border-b border-zinc-200 dark:border-zinc-800">
-                <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-                    <h1 className="text-2xl font-black tracking-tighter bg-gradient-to-r from-blue-600 to-indigo-500 bg-clip-text text-transparent">
-                        NewsGate.
-                    </h1>
-                    <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-zinc-600 dark:text-zinc-400">
-                        <a href="#" className="hover:text-black dark:hover:text-white transition-colors">Terbaru</a>
-                        <a href="#" className="hover:text-black dark:hover:text-white transition-colors">Politik</a>
-                        <a href="#" className="hover:text-black dark:hover:text-white transition-colors">Teknologi</a>
-                        <a href="#" className="hover:text-black dark:hover:text-white transition-colors">Bisnis</a>
-                    </nav>
-                    <div className="flex items-center gap-4">
-                        {/* Auth UI Placeholder */}
-                        <button className="text-sm font-medium hover:text-blue-500 transition-colors">Sign In</button>
-                    </div>
+          <Navbar />
+
+          <main className="pt-24 pb-section-padding min-h-screen">
+            {children}
+          </main>
+
+          {/* Footer */}
+          <footer className="bg-surface-container-lowest border-t border-outline-variant w-full py-section-padding">
+            <div className="flex flex-col md:flex-row justify-between items-start gap-gutter px-margin-desktop max-w-container-max mx-auto">
+              <div className="flex flex-col gap-6 max-w-sm">
+                <span className="font-headline-md text-xl font-black text-on-surface">NewsGate</span>
+                <p className="font-body-md text-sm text-on-surface-variant">Leading news platform providing accurate, in-depth, and real-time information for the modern reader. Bloomberg for Everyone.</p>
+                <div className="flex gap-4">
+                  <a className="text-on-surface-variant hover:text-primary transition-colors" href="#"><span className="material-symbols-outlined">public</span></a>
+                  <a className="text-on-surface-variant hover:text-primary transition-colors" href="#"><span className="material-symbols-outlined">share</span></a>
+                  <a className="text-on-surface-variant hover:text-primary transition-colors" href="#"><span className="material-symbols-outlined">mail</span></a>
                 </div>
-            </header>
-            
-            <main className="px-4 py-8">
-                {children}
-            </main>
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-12">
+                <div className="flex flex-col gap-4">
+                  <span className="font-label-caps text-xs text-primary">COMPANY</span>
+                  <nav className="flex flex-col gap-2 text-sm">
+                    <a className="text-on-surface-variant hover:text-primary hover:underline transition-colors" href="#">About</a>
+                    <a className="text-on-surface-variant hover:text-primary hover:underline transition-colors" href="#">Sources</a>
+                    <a className="text-on-surface-variant hover:text-primary hover:underline transition-colors" href="#">Newsroom</a>
+                  </nav>
+                </div>
+                <div className="flex flex-col gap-4">
+                  <span className="font-label-caps text-xs text-primary">LEGAL</span>
+                  <nav className="flex flex-col gap-2 text-sm">
+                    <a className="text-on-surface-variant hover:text-primary hover:underline transition-colors" href="#">Privacy Policy</a>
+                    <a className="text-on-surface-variant hover:text-primary hover:underline transition-colors" href="#">Terms of Service</a>
+                    <a className="text-on-surface-variant hover:text-primary hover:underline transition-colors" href="#">Editorial Guidelines</a>
+                  </nav>
+                </div>
+              </div>
+            </div>
+            <div className="mt-16 px-margin-desktop max-w-container-max mx-auto pt-8 border-t border-outline-variant/30 flex flex-col md:flex-row justify-between gap-4 text-xs">
+              <p className="text-on-surface-variant">© 2026 NewsGate Global. Bloomberg for Everyone.</p>
+              <div className="flex gap-6">
+                <span className="text-on-surface-variant">English</span>
+                <span className="text-on-surface-variant">UTC +7:00</span>
+              </div>
+            </div>
+          </footer>
         </Providers>
       </body>
     </html>

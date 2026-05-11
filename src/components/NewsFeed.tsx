@@ -11,6 +11,23 @@ interface NewsFeedProps {
     initialSearch?: string;
 }
 
+const getRelativeTime = (date: string) => {
+    const now = new Date();
+    const then = new Date(date);
+    const diffInMs = now.getTime() - then.getTime();
+    const diffInMins = Math.floor(diffInMs / (1000 * 60));
+    const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
+    const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+
+    if (diffInMins < 1) return 'just now';
+    if (diffInMins < 60) return `${diffInMins}m ago`;
+    if (diffInHours < 24) return `${diffInHours}h ago`;
+    if (diffInDays === 1) return 'yesterday';
+    if (diffInDays < 7) return `${diffInDays}d ago`;
+    
+    return then.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
+};
+
 export default function NewsFeed({ initialCategory = "all", initialSearch = "" }: NewsFeedProps) {
     const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -29,13 +46,14 @@ export default function NewsFeed({ initialCategory = "all", initialSearch = "" }
     };
 
     // TanStack Query untuk fetching data
-    const { data: articles, refetch, isLoading } = useQuery({
+    const { data: articles, refetch, isFetching } = useQuery({
         queryKey: ["articles", initialCategory, initialSearch],
         queryFn: async () => {
             const res = await getNewsArticles({ category: initialCategory, query: initialSearch });
             if (res.success) return res.data;
             throw new Error(res.error);
         },
+        placeholderData: (previousData) => previousData,
         staleTime: 60 * 1000 * 5, // 5 menit cache
     });
 
@@ -58,7 +76,29 @@ export default function NewsFeed({ initialCategory = "all", initialSearch = "" }
         };
     }, [initialCategory, refetch]);
 
-    if (isLoading) return <div className="text-center py-20 text-on-surface-variant font-body-md animate-pulse">Connecting to the news center...</div>;
+    if (!articles && isFetching) {
+        return (
+            <div className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop animate-pulse">
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-bento-gap mb-16">
+                    <div className="md:col-span-8 rounded-xl bg-surface-container-high h-[600px]"></div>
+                    <div className="md:col-span-4 flex flex-col gap-bento-gap">
+                        <div className="flex-1 rounded-xl bg-surface-container-high"></div>
+                        <div className="flex-1 rounded-xl bg-surface-container-high"></div>
+                    </div>
+                </div>
+                <div className="h-8 w-48 bg-surface-container-high rounded mb-8"></div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-gutter">
+                    {[1, 2, 4, 5].map((i) => (
+                        <div key={i} className="flex flex-col gap-4">
+                            <div className="aspect-[4/3] rounded-xl bg-surface-container-high"></div>
+                            <div className="h-4 w-full bg-surface-container-high rounded"></div>
+                            <div className="h-4 w-2/3 bg-surface-container-high rounded"></div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        );
+    }
 
     if (!articles || articles.length === 0) {
         return <div className="text-center py-20 text-on-surface-variant font-body-md">No news found for this category.</div>;
@@ -69,7 +109,7 @@ export default function NewsFeed({ initialCategory = "all", initialSearch = "" }
     const trendingStories = articles.slice(3);
 
     return (
-        <div className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop">
+        <div className={`max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop transition-opacity duration-300 ${isFetching ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
             {/* Hero Bento Grid Section */}
             <section className="grid grid-cols-1 md:grid-cols-12 gap-bento-gap mb-16">
                 {/* Breaking Story (Large Card) */}
@@ -103,7 +143,7 @@ export default function NewsFeed({ initialCategory = "all", initialSearch = "" }
                                 {breakingStory.title}
                             </h1>
                             <div className="flex items-center gap-4 text-on-surface-variant font-data-point text-xs">
-                                <span className="font-medium uppercase tracking-wider">{breakingStory.source?.name} • {new Date(breakingStory.publishedAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })} EST</span>
+                                <span className="font-medium uppercase tracking-wider">{breakingStory.source?.name} • UPDATED {getRelativeTime(breakingStory.publishedAt)}</span>
                                 <span className="flex items-center gap-1">
                                     <span className="material-symbols-outlined text-[16px]">visibility</span> {Math.floor(Math.random() * 20)}k
                                 </span>
@@ -134,7 +174,7 @@ export default function NewsFeed({ initialCategory = "all", initialSearch = "" }
                                 <p className="font-label-caps text-[10px] font-bold text-on-surface-variant mb-2 uppercase tracking-widest">{article.category}</p>
                                 <h2 className="font-headline-md text-lg font-bold text-on-surface line-clamp-2">{article.title}</h2>
                                 <p className="font-data-point text-[10px] text-on-surface-variant mt-2 uppercase tracking-wider">
-                                    {article.source?.name} • {new Date(article.publishedAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })} EST
+                                    {article.source?.name} • {getRelativeTime(article.publishedAt)}
                                 </p>
                             </div>
                         </motion.a>
@@ -164,7 +204,7 @@ export default function NewsFeed({ initialCategory = "all", initialSearch = "" }
             {/* Content Feed Grid */}
             <div 
                 ref={scrollRef}
-                className="flex gap-gutter overflow-x-auto snap-x snap-mandatory scroll-smooth pb-4 no-scrollbar"
+                className="flex gap-gutter overflow-x-auto snap-x snap-mandatory scroll-smooth pb-4 no-scrollbar min-h-[300px]"
             >
                 <AnimatePresence mode="popLayout">
                     {trendingStories.map((article) => (
@@ -195,7 +235,7 @@ export default function NewsFeed({ initialCategory = "all", initialSearch = "" }
                                 </h4>
                                 <div className="flex justify-between items-center font-data-point text-[10px] text-on-surface-variant uppercase tracking-wider">
                                     <span>{article.source?.name}</span>
-                                    <span>{new Date(article.publishedAt).toLocaleDateString('en-US', { day: 'numeric', month: 'short' })}</span>
+                                    <span>{getRelativeTime(article.publishedAt)}</span>
                                 </div>
                             </div>
                         </motion.a>

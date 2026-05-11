@@ -10,11 +10,10 @@ function NavLinks() {
   const activeCategory = searchParams.get("category") || "all";
 
   const categories = [
-    { name: "Markets", slug: "all", href: "/" },
-    { name: "Tech", slug: "technology", href: "/?category=technology" },
+    { name: "All", slug: "all", href: "/" },
+    { name: "Crypto", slug: "crypto", href: "/?category=crypto" },
     { name: "Politics", slug: "politics", href: "/?category=politics" },
     { name: "Energy", slug: "energy", href: "/?category=energy" },
-    { name: "Crypto", slug: "crypto", href: "/?category=crypto" },
   ];
 
   return (

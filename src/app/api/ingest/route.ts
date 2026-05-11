@@ -42,18 +42,41 @@ export async function POST(req: Request) {
         const supabase = createClient(supabaseUrl, supabaseServiceRoleKey);
 
         // Prepare data for upsert
-        const articlesToUpsert = incomingArticles.map((article) => ({
-            id: crypto.randomUUID(),
-            title: article.title,
-            slug: article.slug,
-            content: article.content,
-            source_url: article.sourceUrl, // Maps to source_url in DB
-            image_url: article.imageUrl,
-            category: article.category,
-            source_id: article.sourceId,
-            published_at: new Date(article.publishedAt).toISOString(),
-            sentiment_score: Math.floor(Math.random() * 100),
-        }));
+        const articlesToUpsert = incomingArticles.map((article: any) => {
+            const text = (article.title + " " + (article.content || "")).toLowerCase();
+            
+            // Use incoming sentimentScore if available (from CryptoPanic), otherwise calculate
+            let impactScore = article.sentimentScore;
+
+            if (impactScore === undefined || impactScore === null) {
+                impactScore = Math.floor(Math.random() * 20) + 30; // Base score 30-50
+
+                // Impact weights for keywords
+                const criticalTerms = ['sec', 'fed', 'etf', 'hack', 'exploit', 'regulation', 'lawsuit', 'approved'];
+                const moderateTerms = ['opec', 'oil', 'gas', 'market', 'bitcoin', 'btc', 'eth', 'price surge', 'crash', 'conflict', 'sanctions'];
+                
+                criticalTerms.forEach(term => {
+                    if (text.includes(term)) impactScore += 45; 
+                });
+
+                moderateTerms.forEach(term => {
+                    if (text.includes(term)) impactScore += 15;
+                });
+            }
+
+            return {
+                id: crypto.randomUUID(),
+                title: article.title,
+                slug: article.slug,
+                content: article.content,
+                source_url: article.sourceUrl,
+                image_url: article.imageUrl,
+                category: article.category,
+                source_id: article.sourceId,
+                published_at: new Date(article.publishedAt).toISOString(),
+                sentiment_score: Math.min(Math.round(impactScore), 100),
+            };
+        });
 
         // 2. Upsert using Supabase
         // onConflict: "source_url" ensures we deduplicate on sourceUrl

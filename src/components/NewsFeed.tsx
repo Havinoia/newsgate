@@ -9,6 +9,7 @@ import { createClient } from "@/utils/supabase/client";
 interface NewsFeedProps {
     initialCategory?: string;
     initialSearch?: string;
+    sortBy?: string;
     onSelectArticle?: (article: any) => void;
     selectedArticleId?: string | number;
 }
@@ -30,14 +31,19 @@ const getRelativeTime = (date: string) => {
 export default function NewsFeed({ 
     initialCategory = "all", 
     initialSearch = "",
+    sortBy = "latest",
     onSelectArticle,
     selectedArticleId
 }: NewsFeedProps) {
     // TanStack Query untuk fetching data
     const { data: articles, refetch, isFetching } = useQuery({
-        queryKey: ["articles", initialCategory, initialSearch],
+        queryKey: ["articles", initialCategory, initialSearch, sortBy],
         queryFn: async () => {
-            const res = await getNewsArticles({ category: initialCategory, query: initialSearch });
+            const res = await getNewsArticles({ 
+                category: initialCategory, 
+                query: initialSearch,
+                sortBy: sortBy
+            });
             if (res.success) return res.data;
             throw new Error(res.error);
         },
@@ -107,14 +113,13 @@ export default function NewsFeed({
                             onClick={() => onSelectArticle?.(article)}
                             className={`p-4 border-b border-outline-variant/10 cursor-pointer transition-all hover:bg-surface-variant/20 group relative ${isSelected ? 'bg-secondary-container/10 border-l-4 border-l-secondary' : 'border-l-4 border-l-transparent'}`}
                         >
-                            <div className="flex justify-between items-start mb-2">
-                                <span className={`font-label-caps text-[9px] px-2 py-0.5 rounded tracking-widest font-black ${
-                                    isSelected ? 'bg-secondary text-on-secondary' : 'bg-surface-variant text-on-surface-variant'
-                                }`}>
-                                    {article.category?.toUpperCase() || "INTEL"}
+                            <div className="flex justify-between items-center mb-1.5">
+                                <span className="text-[9px] font-black text-secondary tracking-[0.15em] uppercase px-2 py-0.5 bg-secondary/10 rounded-md border border-secondary/20">
+                                    {article.category}
                                 </span>
-                                <span className="font-data-point text-[10px] text-outline font-medium tracking-tighter">
-                                    {getRelativeTime(article.publishedAt)}
+                                <span className="text-[9px] font-bold text-outline tracking-wider flex items-center gap-1.5 bg-surface-container-high px-2 py-0.5 rounded-md">
+                                    <span className="material-symbols-outlined text-[12px] text-secondary">schedule</span>
+                                    {new Date(article.publishedAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })} | {new Date(article.publishedAt).toLocaleDateString('en-US', { day: 'numeric', month: 'short' }).toUpperCase()}
                                 </span>
                             </div>
                             
@@ -131,7 +136,7 @@ export default function NewsFeed({
                             <div className="flex items-center gap-4 text-[10px] text-outline font-label-caps tracking-wider">
                                 <span className="flex items-center gap-1">
                                     <span className="material-symbols-outlined text-[14px]">bolt</span> 
-                                    {index < 3 ? "HIGH IMPACT" : "MID IMPACT"}
+                                    {article.sentimentScore >= 70 ? "HIGH IMPACT" : article.sentimentScore >= 40 ? "MID IMPACT" : "LOW IMPACT"}
                                 </span>
                                 <span className="flex items-center gap-1">
                                     <span className="material-symbols-outlined text-[14px]">share</span> 

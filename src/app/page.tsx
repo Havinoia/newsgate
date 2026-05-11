@@ -13,42 +13,8 @@ export default function Home() {
   const q = searchParams.get("q") || "";
   
   const [selectedArticle, setSelectedArticle] = useState<any>(null);
-  const [metrics, setMetrics] = useState({ reliability: 88, impact: 45, volatility: 20 });
+  const [sortBy, setSortBy] = useState<string>("latest");
 
-  // Intelligent Impact Engine - Only run on client
-  useEffect(() => {
-    if (!selectedArticle) {
-        setMetrics({ reliability: 88, impact: 45, volatility: 20 });
-        return;
-    }
-    
-    const text = (selectedArticle.title + " " + (selectedArticle.content || "")).toLowerCase();
-    let reliability = 78 + (Math.random() * 12); 
-    let impact = 12 + (Math.random() * 15);
-    let volatility = 8 + (Math.random() * 12);
-
-    const weights = [
-      { terms: ["sec", "fed", "regulation", "etf", "approved", "lawsuit"], impact: 42, vol: 28 },
-      { terms: ["bitcoin", "btc", "eth", "ethereum", "crypto", "digital asset"], impact: 25, vol: 18 },
-      { terms: ["hack", "exploit", "scam", "crash", "liquidation", "insolvent"], impact: 52, vol: 45 },
-      { terms: ["inflation", "rates", "economic", "market", "tradfi"], impact: 18, vol: 12 },
-      { terms: ["conflict", "sanctions", "geopolitical", "policy"], impact: 22, vol: 15 }
-    ];
-
-    weights.forEach(w => {
-      if (w.terms.some(t => text.includes(t))) {
-        impact += w.impact;
-        volatility += w.vol;
-        reliability += 2;
-      }
-    });
-
-    setMetrics({
-      reliability: Math.min(Math.round(reliability), 99),
-      impact: Math.min(Math.round(impact), 98),
-      volatility: Math.min(Math.round(volatility), 95)
-    });
-  }, [selectedArticle]);
 
   // Reset selection when category changes
   useEffect(() => {
@@ -66,11 +32,26 @@ export default function Home() {
           </div>
           <div className="h-4 w-[1px] bg-outline-variant/30"></div>
           <div className="flex items-center gap-4">
-            <span className="font-label-caps text-[10px] text-on-surface-variant font-bold">DENSITY FILTER:</span>
-            <div className="flex bg-surface-container-high rounded-full p-1 border border-outline-variant/20">
-              <button className="px-4 py-1 bg-secondary-container text-on-secondary-container text-[10px] rounded-full font-black tracking-wider uppercase">Signal</button>
-              <button className="px-4 py-1 text-on-surface-variant text-[10px] hover:text-on-surface transition-colors font-bold tracking-wider uppercase">Mixed</button>
-              <button className="px-4 py-1 text-on-surface-variant text-[10px] hover:text-on-surface transition-colors font-bold tracking-wider uppercase">Noise</button>
+            <span className="font-label-caps text-[10px] text-on-surface-variant font-bold tracking-widest">SORT INTELLIGENCE:</span>
+            <div className="flex bg-surface-container-high rounded-full p-1 border border-outline-variant/20 shadow-inner">
+              <button 
+                onClick={() => setSortBy("impact")}
+                className={`px-4 py-1.5 text-[10px] rounded-full font-black tracking-wider uppercase transition-all duration-300 ${sortBy === 'impact' ? 'bg-secondary text-on-secondary shadow-[0_0_12px_rgba(180,197,255,0.4)]' : 'text-on-surface-variant hover:text-on-surface'}`}
+              >
+                High Impact
+              </button>
+              <button 
+                onClick={() => setSortBy("latest")}
+                className={`px-4 py-1.5 text-[10px] rounded-full font-black tracking-wider uppercase transition-all duration-300 ${sortBy === 'latest' ? 'bg-secondary text-on-secondary shadow-[0_0_12px_rgba(180,197,255,0.4)]' : 'text-on-surface-variant hover:text-on-surface'}`}
+              >
+                Latest
+              </button>
+              <button 
+                onClick={() => setSortBy("oldest")}
+                className={`px-4 py-1.5 text-[10px] rounded-full font-black tracking-wider uppercase transition-all duration-300 ${sortBy === 'oldest' ? 'bg-secondary-container text-on-secondary-container' : 'text-on-surface-variant hover:text-on-surface'}`}
+              >
+                Oldest
+              </button>
             </div>
           </div>
         </div>
@@ -98,6 +79,7 @@ export default function Home() {
             <NewsFeed 
               initialCategory={category} 
               initialSearch={q} 
+              sortBy={sortBy}
               onSelectArticle={setSelectedArticle} 
               selectedArticleId={selectedArticle?.id} 
             />
@@ -139,12 +121,21 @@ export default function Home() {
                         <img className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" src={selectedArticle.imageUrl || "https://picsum.photos/seed/analysis/400/400"} alt="Analysis" />
                         <div className="absolute inset-0 bg-secondary/10"></div>
                       </div>
-                      <div>
-                        <h2 className="text-3xl font-black text-on-surface tracking-tighter leading-none mb-2 uppercase">{selectedArticle.title}</h2>
-                        <p className="text-sm text-on-surface-variant font-body-md uppercase tracking-wide">
-                          Source <span className="text-secondary font-bold">{selectedArticle.source?.name}</span> • {new Date(selectedArticle.publishedAt).toLocaleDateString()}
-                        </p>
-                      </div>
+                            <div className="flex flex-col">
+                              <h4 className="font-headline-sm text-xl font-black text-on-surface tracking-tight group-hover:text-secondary transition-colors line-clamp-2">
+                                {selectedArticle.title}
+                              </h4>
+                              <div className="flex items-center gap-3 mt-1.5">
+                                <span className="text-[10px] font-black text-secondary tracking-[0.1em] uppercase">
+                                  Source {selectedArticle.source?.name || "NewsGate System"}
+                                </span>
+                                <span className="w-1 h-1 bg-outline-variant/50 rounded-full"></span>
+                                <span className="text-[10px] font-bold text-outline tracking-wider flex items-center gap-1.5">
+                                  <span className="material-symbols-outlined text-[14px]">calendar_today</span>
+                                  {new Date(selectedArticle.publishedAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })} | {new Date(selectedArticle.publishedAt).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }).toUpperCase()}
+                                </span>
+                              </div>
+                            </div>
                     </div>
                     
                     <div className="prose prose-invert max-w-none text-on-surface-variant leading-relaxed font-body-lg text-lg">
@@ -160,51 +151,6 @@ export default function Home() {
                   </div>
 
                   <div className="col-span-12 lg:col-span-4 space-y-6">
-                    <div className="bg-surface-container-high/60 backdrop-blur-md rounded-2xl p-6 border border-outline-variant/20 shadow-xl">
-                      <h6 className="font-label-caps text-[10px] text-outline mb-6 uppercase tracking-[0.2em] font-black">Impact Matrix</h6>
-                      <div className="space-y-6">
-                        <div>
-                          <div className="flex justify-between text-[11px] mb-2 font-bold tracking-tight">
-                            <span>Intelligence Reliability</span>
-                            <span className="text-secondary">+{metrics.reliability}%</span>
-                          </div>
-                          <div className="w-full h-1.5 bg-background rounded-full overflow-hidden">
-                            <motion.div 
-                              initial={{ width: 0 }}
-                              animate={{ width: `${metrics.reliability}%` }}
-                              className="h-full bg-secondary rounded-full shadow-[0_0_8px_#b4c5ff]"
-                            />
-                          </div>
-                        </div>
-                        <div>
-                          <div className="flex justify-between text-[11px] mb-2 font-bold tracking-tight">
-                            <span>Market Impact</span>
-                            <span className="text-secondary">+{metrics.impact}%</span>
-                          </div>
-                          <div className="w-full h-1.5 bg-background rounded-full overflow-hidden">
-                            <motion.div 
-                              initial={{ width: 0 }}
-                              animate={{ width: `${metrics.impact}%` }}
-                              className="h-full bg-secondary rounded-full shadow-[0_0_8px_#b4c5ff]"
-                            />
-                          </div>
-                        </div>
-                        <div>
-                          <div className="flex justify-between text-[11px] mb-2 font-bold tracking-tight">
-                            <span>Volatility Forecast</span>
-                            <span className="text-error">+{metrics.volatility}%</span>
-                          </div>
-                          <div className="w-full h-1.5 bg-background rounded-full overflow-hidden">
-                            <motion.div 
-                              initial={{ width: 0 }}
-                              animate={{ width: `${metrics.volatility}%` }}
-                              className="h-full bg-error rounded-full shadow-[0_0_8px_#ffb4ab]"
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
                     <div className="bg-surface-container-high/60 backdrop-blur-md rounded-2xl p-6 border border-outline-variant/20 shadow-xl">
                       <h6 className="font-label-caps text-[10px] text-outline mb-4 uppercase tracking-[0.2em] font-black">Related Entities</h6>
                       <div className="flex flex-wrap gap-2">

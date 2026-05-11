@@ -6,11 +6,12 @@ interface GetArticlesParams {
     query?: string;
     category?: string;
     timeRange?: string; // e.g. "last-6-hours", "last-24-hours", "all"
+    sortBy?: string; // "latest", "impact", "trending"
     limit?: number;
 }
 
 export async function getNewsArticles(params: GetArticlesParams) {
-    const { query, category, timeRange, limit = 20 } = params;
+    const { query, category, timeRange, sortBy = "latest", limit = 20 } = params;
     
     try {
         const supabase = await createClient();
@@ -24,9 +25,23 @@ export async function getNewsArticles(params: GetArticlesParams) {
                     name,
                     icon_url
                 )
-            `)
-            .order('published_at', { ascending: false })
-            .limit(limit);
+            `);
+
+        // Handle Sorting & Filtering
+        if (sortBy === "impact") {
+            // High Impact is defined as news affecting market > 50%
+            dbQuery = dbQuery.gte('sentiment_score', 50)
+                             .order('sentiment_score', { ascending: false })
+                             .order('published_at', { ascending: false });
+        } else if (sortBy === "oldest") {
+            // Oldest is ascending chronological
+            dbQuery = dbQuery.order('published_at', { ascending: true });
+        } else {
+            // Latest is pure descending chronological (default)
+            dbQuery = dbQuery.order('published_at', { ascending: false });
+        }
+
+        dbQuery = dbQuery.limit(limit);
 
         // Filter Kategori
         if (category && category !== "all") {

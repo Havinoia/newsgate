@@ -2,153 +2,143 @@ import { createClient } from '@supabase/supabase-js';
 import * as dotenv from 'dotenv';
 import path from 'path';
 
-// Load .env.local
 dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const INGESTION_SECRET = process.env.INGESTION_SECRET;
 const NEWSAPI_KEY = process.env.NEWSAPI_KEY;
-const APP_URL = 'http://localhost:3000'; // Sesuaikan jika berjalan di port lain
+const APP_URL = 'http://localhost:3000';
 
-if (!SUPABASE_URL || !SUPABASE_KEY || !INGESTION_SECRET || !NEWSAPI_KEY) {
-    console.error("Missing environment variables. Make sure .env.local has NEWSAPI_KEY configured.");
+if (!SUPABASE_URL || !SUPABASE_KEY || !INGESTION_SECRET) {
+    console.error("Missing critical environment variables.");
     process.exit(1);
 }
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// NewsAPI Categories: business, entertainment, general, health, science, sports, technology
-// English Mapping:
-const CATEGORY_MAP: Record<string, string> = {
-    'technology': 'technology',
-    'sports': 'sports',
-    'entertainment': 'entertainment',
-    'business': 'business',
-    'health': 'health',
-    'general': 'politics',
-    'game': 'game'
+// STRATEGI QUERY KETAT NEWSAPI
+const EXCLUDE_NOISE = '-sports -football -soccer -coach -manager -match -celebrity -movie -film -music -entertainment -hollywood -nba -nfl -fifa -tennis -basketball -lottery -draft -playoffs';
+
+const QUERIES = {
+    crypto: `(cryptocurrency OR blockchain OR bitcoin OR ethereum OR "digital assets") -scam -giveaway ${EXCLUDE_NOISE}`,
+    politics: `(geopolitics OR legislation OR parliament OR "foreign policy" OR "white house" OR "national security") ${EXCLUDE_NOISE}`,
+    energy: `(energy OR "renewable energy" OR "oil and gas" OR "nuclear power" OR "energy market") -car -vehicle -automotive ${EXCLUDE_NOISE}`,
+    all: `((cryptocurrency OR blockchain) OR (geopolitics OR legislation) OR (energy OR "oil and gas")) -scam -car -vehicle ${EXCLUDE_NOISE}`
 };
 
-const NEWS_API_CATEGORIES = Object.keys(CATEGORY_MAP);
+function calculateLocalImpact(title: string, content: string): number {
+    const text = (title + " " + content).toLowerCase();
+    let score = Math.floor(Math.random() * 15) + 35; // Base 35-50
 
-async function fetchFromNewsAPI(category: string, sourceId: string) {
-    console.log(`🌐 Fetching real news from NewsAPI.org for category: ${category}...`);
-    
-    let url = `https://newsapi.org/v2/top-headlines?country=us&category=${category}&apiKey=${NEWSAPI_KEY}&pageSize=5`;
-    
-    // Khusus untuk Game, kita gunakan Sumber Terpercaya (IGN, Polygon) dengan filter sangat ketat
-    if (category === 'game') {
-        url = `https://newsapi.org/v2/everything?sources=ign,polygon&q=(gaming OR "video games" OR PlayStation OR Nintendo OR Xbox) -drone -camera -laptop -phone -Ryzen -Intel -bike -scooter -deal -sale -shipping&sortBy=publishedAt&language=en&apiKey=${NEWSAPI_KEY}&pageSize=10`;
-    } else if (category === 'general') {
-        url = `https://newsapi.org/v2/top-headlines?country=us&category=general&apiKey=${NEWSAPI_KEY}&pageSize=5`;
-    }
+    const highImpactTerms = ['sec', 'fed', 'etf', 'approved', 'hack', 'exploit', 'opec', 'oil spike', 'crash', 'regulation', 'lawsuit', 'bankruptcy', 'sanctions', 'conflict'];
+    const midImpactTerms = ['bitcoin', 'btc', 'eth', 'market', 'surge', 'dip', 'partnership', 'launch', 'investment', 'policy'];
 
-    const response = await fetch(url);
-    
-    if (!response.ok) {
-        throw new Error(`NewsAPI Error: ${response.statusText}`);
-    }
+    highImpactTerms.forEach(term => {
+        if (text.includes(term)) score += 35;
+    });
 
-    const data = await response.json();
-    
-    if (!data.articles || data.articles.length === 0) {
+    midImpactTerms.forEach(term => {
+        if (text.includes(term)) score += 10;
+    });
+
+    return Math.min(score, 99);
+}
+
+async function fetchFromNewsAPIStrict(categoryKey: keyof typeof QUERIES) {
+    if (!NEWSAPI_KEY) {
+        console.log("⚠️ NewsAPI Key missing.");
         return [];
     }
 
-    // Strict Filter Logic untuk memastikan berita murni Game
-    const negativeKeywords = [
-        'drone', 'camera', 'laptop', 'phone', 'bike', 'scooter', 'shipping', 'aliexpress', 'amazon', 
-        'monitor', 'keyboard', 'mouse', 'cpu', 'gpu', 'soundbar', 'subwoofer', 'bundle', 'save % off', 
-        'deal', 'price', 'discount', 'ssd', 'headset', 'earbuds', 'watch'
-    ];
+    console.log(`🌐 [NewsAPI Strict] Fetching intelligence for: ${categoryKey.toUpperCase()}...`);
+    
+    // Gunakan endpoint 'everything' untuk kontrol query yang maksimal
+    const query = QUERIES[categoryKey];
+    const url = `https://newsapi.org/v2/everything?q=${encodeURIComponent(query)}&sortBy=publishedAt&language=en&apiKey=${NEWSAPI_KEY}&pageSize=15`;
 
-    const positiveGamingKeywords = [
-        'game', 'playstation', 'xbox', 'nintendo', 'switch', 'ps5', 'rpg', 'mmo', 'fps', 'trailer', 
-        'review', 'patch', 'update', 'dlc', 'steam', 'epic', 'multiplayer', 'singleplayer', 'battle royale',
-        'remake', 'remaster', 'esports', 'stardew', 'pokémon', 'zelda', 'elden', 'halo', 'cod', 'gta'
-    ];
+    try {
+        const response = await fetch(url);
+        const data = await response.json();
 
-    // Map NewsAPI structure to our FetchedArticle interface
-    return data.articles
-        .filter((article: any) => {
-            if (!article.title || !article.url || article.url === 'https://removed.com') return false;
-            
-            const titleLower = article.title.toLowerCase();
-            
-            // 1. Cek Kata Kunci Negatif (Hardware/Deals)
-            const hasNegative = negativeKeywords.some(word => titleLower.includes(word));
-            if (hasNegative) return false;
+        if (data.status === 'error') {
+            console.error(`❌ NewsAPI Error (${categoryKey}):`, data.message);
+            return [];
+        }
 
-            // 2. Cek Kata Kunci Positif (Wajib ada nuansa Gaming)
-            // Jika kategori adalah 'game', kita wajibkan ada kata kunci gaming di judul
-            if (category === 'game') {
-                const hasPositive = positiveGamingKeywords.some(word => titleLower.includes(word));
-                if (!hasPositive) return false;
-            }
+        if (!data.articles) return [];
 
-            return true;
-        })
-        .map((article: any) => {
-            const safeTitle = article.title.split(' - ')[0]; // Remove source name from title
-            const slug = safeTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '') + '-' + Math.floor(Math.random() * 10000);
-            
-            return {
-                title: safeTitle,
-                slug: slug,
-                content: article.description || article.content || "No description available.",
-                sourceUrl: article.url,
-                imageUrl: article.urlToImage || `https://picsum.photos/seed/${slug}/800/400`, // Fallback image
-                category: CATEGORY_MAP[category],
-                sourceId: sourceId,
-                publishedAt: article.publishedAt
-            };
-        });
+        return data.articles
+            .filter((a: any) => {
+                if (!a.title || !a.url || a.url === 'https://removed.com' || !a.description) return false;
+                
+                const contentText = (a.title + " " + (a.description || "")).toLowerCase();
+                
+                // 1. Filter out broken JSON/System error content
+                if (contentText.includes('{"en":') || contentText.includes('access_disabled')) return false;
+                
+                // 2. Strict Noise Filter (Global)
+                const hardExcludes = ['nba', 'lottery', 'draft', 'playoffs', 'lebron', 'curry', 'lakers', 'match', 'score', 'stadium', 'olympics', 'hollywood', 'celebrity'];
+                if (hardExcludes.some(word => contentText.includes(word))) return false;
+
+                // 3. Category Guard: Berita HARUS relevan dengan kategorinya
+                const categoryKeywords: Record<string, string[]> = {
+                    crypto: ['bitcoin', 'btc', 'eth', 'ethereum', 'crypto', 'blockchain', 'wallet', 'exchange', 'token', 'sec', 'binance', 'coinbase'],
+                    politics: ['government', 'policy', 'legislation', 'parliament', 'election', 'treaty', 'sanctions', 'white house', 'biden', 'trump', 'minister', 'diplomatic', 'nato', 'un'],
+                    energy: ['oil', 'gas', 'crude', 'petroleum', 'renewable', 'solar', 'wind', 'nuclear', 'opec', 'energy', 'refinery', 'drilling']
+                };
+
+                const currentKey = categoryKey === 'all' ? null : categoryKey;
+                if (currentKey && categoryKeywords[currentKey]) {
+                    const hasMatch = categoryKeywords[currentKey].some(word => contentText.includes(word));
+                    if (!hasMatch) return false; // Buang jika tidak ada kata kunci kategori
+                }
+
+                return true;
+            })
+            .map((a: any) => {
+                const impactScore = calculateLocalImpact(a.title, a.description || a.content || "");
+                
+                // Determinasi kategori berdasarkan konten jika ini adalah fetch 'all'
+                let finalCategory = categoryKey === 'all' ? 'politics' : categoryKey;
+                if (categoryKey === 'all') {
+                    const text = (a.title + " " + a.description).toLowerCase();
+                    if (text.includes('crypto') || text.includes('bitcoin') || text.includes('blockchain')) finalCategory = 'crypto';
+                    else if (text.includes('energy') || text.includes('oil') || text.includes('gas')) finalCategory = 'energy';
+                }
+
+                return {
+                    title: a.title.split(' - ')[0],
+                    slug: a.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 50) + '-' + Math.floor(Math.random() * 1000),
+                    content: a.description || a.content || "Deep dive analysis provided via NewsGate Global Intelligence Network.",
+                    sourceUrl: a.url,
+                    imageUrl: a.urlToImage || `https://picsum.photos/seed/${Math.random()}/800/400`,
+                    category: finalCategory,
+                    sourceId: a.source?.name || 'newsapi',
+                    publishedAt: a.publishedAt,
+                    sentimentScore: impactScore
+                };
+            });
+    } catch (e) {
+        console.error(`❌ Fetch Error (${categoryKey}):`, e);
+        return [];
+    }
 }
 
 async function startWorker() {
-    console.log("🚀 Starting NewsAPI Real-Time Ingestion Worker...");
+    console.log("🚀 NewsGate STRICT NewsAPI Ingestion Worker Started...");
 
-    // 1. Pastikan minimal ada 1 sumber berita (news_source)
-    let { data: sources, error: sourceError } = await supabase.from('news_source').select('id').limit(1);
-    
-    let sourceId: string;
-    
-    if (sourceError || !sources || sources.length === 0) {
-        console.log("⚠️ No news sources found. Creating a default source...");
-        const { data: newSource, error: insertError } = await supabase
-            .from('news_source')
-            .insert([{ name: 'NewsGate System', icon_url: 'https://ui-avatars.com/api/?name=NG&background=random' }])
-            .select()
-            .single();
-            
-        if (insertError) {
-            console.error("❌ Failed to create default source:", insertError);
-            return;
-        }
-        sourceId = newSource.id;
-    } else {
-        sourceId = sources[0].id;
-    }
+    const runCycle = async () => {
+        // Siklus pengambilan data: Secara bergantian mengambil kategori spesifik atau 'all'
+        // Untuk memastikan variasi, kita ambil kategori acak tiap siklus
+        const taskList: (keyof typeof QUERIES)[] = ['crypto', 'politics', 'energy', 'all'];
+        const currentTask = taskList[Math.floor(Math.random() * taskList.length)];
+        
+        const articles = await fetchFromNewsAPIStrict(currentTask);
 
-    console.log(`✅ Ready to ingest using Source ID: ${sourceId}`);
-    console.log("⏳ Worker is running. Fetching real news every 10 minutes to save API limits...\n");
-
-    const runIngestionCycle = async () => {
-        try {
-            // Pilih satu kategori secara acak agar adil setiap kali jalan
-            const randomCategory = NEWS_API_CATEGORIES[Math.floor(Math.random() * NEWS_API_CATEGORIES.length)];
-            
-            const articles = await fetchFromNewsAPI(randomCategory, sourceId);
-            
-            if (articles.length === 0) {
-                console.log(`⚠️ No new articles found for category: ${randomCategory}`);
-                return;
-            }
-
-            console.log(`📡 Ingesting ${articles.length} real articles into database...`);
-
-            const response = await fetch(`${APP_URL}/api/ingest`, {
+        if (articles.length > 0) {
+            console.log(`📡 Ingesting ${articles.length} STRICT articles from NewsAPI [Task: ${currentTask}]...`);
+            await fetch(`${APP_URL}/api/ingest`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -156,25 +146,11 @@ async function startWorker() {
                 },
                 body: JSON.stringify({ articles })
             });
-
-            if (!response.ok) {
-                const errText = await response.text();
-                throw new Error(`HTTP Error ${response.status}: ${errText}`);
-            }
-
-            const data = await response.json();
-            console.log(`✅ Success: ${data.message}\n`);
-            
-        } catch (error) {
-            console.error("❌ Ingestion Request Failed:", error);
         }
     };
 
-    // Jalankan segera ketika script dimulai
-    await runIngestionCycle();
-
-    // Loop interval setiap 10 menit (600.000 ms)
-    setInterval(runIngestionCycle, 600000);
+    await runCycle();
+    setInterval(runCycle, 600000); // 10 menit sekali
 }
 
 startWorker();

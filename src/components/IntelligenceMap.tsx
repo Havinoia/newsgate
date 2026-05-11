@@ -80,39 +80,6 @@ export default function IntelligenceMap() {
         className="absolute left-0 right-0 h-[2px] bg-secondary/20 shadow-[0_0_15px_rgba(180,197,255,0.5)] z-10 pointer-events-none"
       />
 
-      {/* Floating Hotspots */}
-      <div className="absolute top-[35%] left-[22%] group/hotspot">
-        <div className="w-3 h-3 bg-secondary rounded-full relative">
-            <div className="absolute inset-0 bg-secondary rounded-full animate-ping opacity-75"></div>
-            <div className="w-full h-full bg-secondary rounded-full relative z-10 shadow-[0_0_10px_#b4c5ff]"></div>
-        </div>
-        <div className="absolute -top-16 -left-12 w-48 p-3 bg-surface-container-high/90 backdrop-blur-2xl border border-secondary/30 rounded-xl opacity-0 group-hover/hotspot:opacity-100 transition-all duration-300 pointer-events-none translate-y-2 group-hover/hotspot:translate-y-0 shadow-2xl z-20">
-          <p className="text-[10px] font-black text-secondary uppercase tracking-widest mb-1 font-label-caps">NYC Node-01</p>
-          <p className="text-[11px] text-on-surface leading-snug font-medium">Market volatility peak detected. SEC announcement imminent.</p>
-        </div>
-      </div>
-
-      <div className="absolute top-[48%] left-[52%] group/hotspot">
-        <div className="w-3 h-3 bg-error rounded-full relative">
-            <div className="absolute inset-0 bg-error rounded-full animate-ping opacity-75"></div>
-            <div className="w-full h-full bg-error rounded-full relative z-10 shadow-[0_0_10px_#ffb4ab]"></div>
-        </div>
-        <div className="absolute -top-16 -left-12 w-48 p-3 bg-surface-container-high/90 backdrop-blur-2xl border border-error/30 rounded-xl opacity-0 group-hover/hotspot:opacity-100 transition-all duration-300 pointer-events-none translate-y-2 group-hover/hotspot:translate-y-0 shadow-2xl z-20">
-          <p className="text-[10px] font-black text-error uppercase tracking-widest mb-1 font-label-caps">EU Node-04</p>
-          <p className="text-[11px] text-on-surface leading-snug font-medium">Brussels trade council session active. High impact sanctions pending.</p>
-        </div>
-      </div>
-
-      <div className="absolute top-[65%] left-[78%] group/hotspot">
-        <div className="w-3 h-3 bg-tertiary rounded-full relative">
-            <div className="absolute inset-0 bg-tertiary rounded-full animate-ping opacity-75"></div>
-            <div className="w-full h-full bg-tertiary rounded-full relative z-10 shadow-[0_0_10px_#c3c0ff]"></div>
-        </div>
-        <div className="absolute -top-16 -left-12 w-48 p-3 bg-surface-container-high/90 backdrop-blur-2xl border border-tertiary/30 rounded-xl opacity-0 group-hover/hotspot:opacity-100 transition-all duration-300 pointer-events-none translate-y-2 group-hover/hotspot:translate-y-0 shadow-2xl z-20">
-          <p className="text-[10px] font-black text-tertiary uppercase tracking-widest mb-1 font-label-caps">Asia Node-09</p>
-          <p className="text-[11px] text-on-surface leading-snug font-medium">Tech supply chain anomaly detected in Shenzhen corridor.</p>
-        </div>
-      </div>
 
       {/* HUD Layers - Reorganized to prevent overlap */}
       <div className="absolute inset-0 p-6 flex flex-col justify-between pointer-events-none">

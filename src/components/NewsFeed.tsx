@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getNewsArticles } from "@/actions/news";
 import { motion, AnimatePresence } from "framer-motion";
@@ -12,6 +12,22 @@ interface NewsFeedProps {
 }
 
 export default function NewsFeed({ initialCategory = "all", initialSearch = "" }: NewsFeedProps) {
+    const scrollRef = useRef<HTMLDivElement>(null);
+
+    const scroll = (direction: 'left' | 'right') => {
+        if (scrollRef.current) {
+            const { scrollLeft, clientWidth } = scrollRef.current;
+            const scrollTo = direction === 'left' 
+                ? scrollLeft - clientWidth 
+                : scrollLeft + clientWidth;
+            
+            scrollRef.current.scrollTo({
+                left: scrollTo,
+                behavior: 'smooth'
+            });
+        }
+    };
+
     // TanStack Query untuk fetching data
     const { data: articles, refetch, isLoading } = useQuery({
         queryKey: ["articles", initialCategory, initialSearch],
@@ -130,17 +146,26 @@ export default function NewsFeed({ initialCategory = "all", initialSearch = "" }
             <div className="flex items-center justify-between mb-8 border-b border-outline-variant pb-4">
                 <h3 className="font-headline-lg text-2xl font-extrabold text-on-surface tracking-tighter uppercase">Trending Today</h3>
                 <div className="flex gap-2">
-                    <button className="p-2 rounded-full border border-outline-variant hover:bg-white/5 transition-colors">
+                    <button 
+                        onClick={() => scroll('left')}
+                        className="p-2 rounded-full border border-outline-variant hover:bg-white/5 transition-colors"
+                    >
                         <span className="material-symbols-outlined">chevron_left</span>
                     </button>
-                    <button className="p-2 rounded-full border border-outline-variant hover:bg-white/5 transition-colors">
+                    <button 
+                        onClick={() => scroll('right')}
+                        className="p-2 rounded-full border border-outline-variant hover:bg-white/5 transition-colors"
+                    >
                         <span className="material-symbols-outlined">chevron_right</span>
                     </button>
                 </div>
             </div>
 
             {/* Content Feed Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-gutter">
+            <div 
+                ref={scrollRef}
+                className="flex gap-gutter overflow-x-auto snap-x snap-mandatory scroll-smooth pb-4 no-scrollbar"
+            >
                 <AnimatePresence mode="popLayout">
                     {trendingStories.map((article) => (
                         <motion.a 
@@ -152,7 +177,7 @@ export default function NewsFeed({ initialCategory = "all", initialSearch = "" }
                             initial={{ opacity: 0, scale: 0.95 }}
                             animate={{ opacity: 1, scale: 1 }}
                             exit={{ opacity: 0, scale: 0.95 }}
-                            className="flex flex-col gap-4 group"
+                            className="flex-none w-[calc(100%-16px)] sm:w-[calc(50%-12px)] lg:w-[calc(25%-18px)] snap-start flex flex-col gap-4 group"
                         >
                             <div className="relative aspect-[4/3] overflow-hidden rounded-xl bg-surface-container bento-card-glow">
                                 <img 

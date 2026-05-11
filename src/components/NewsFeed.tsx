@@ -76,6 +76,13 @@ export default function NewsFeed({ initialCategory = "all", initialSearch = "" }
         };
     }, [initialCategory, refetch]);
 
+    // Reset scroll position when category or search changes
+    useEffect(() => {
+        if (scrollRef.current) {
+            scrollRef.current.scrollTo({ left: 0, behavior: 'instant' });
+        }
+    }, [initialCategory, initialSearch]);
+
     if (!articles && isFetching) {
         return (
             <div className="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop animate-pulse">
@@ -206,40 +213,45 @@ export default function NewsFeed({ initialCategory = "all", initialSearch = "" }
                 ref={scrollRef}
                 className="flex gap-gutter overflow-x-auto snap-x snap-mandatory scroll-smooth pb-4 no-scrollbar min-h-[300px]"
             >
-                <AnimatePresence mode="popLayout">
-                    {trendingStories.map((article) => (
-                        <motion.a 
-                            key={article.id}
-                            href={article.sourceUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            layout
-                            initial={{ opacity: 0, scale: 0.95 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.95 }}
-                            className="flex-none w-[calc(100%-16px)] sm:w-[calc(50%-12px)] lg:w-[calc(25%-18px)] snap-start flex flex-col gap-4 group"
-                        >
-                            <div className="relative aspect-[4/3] overflow-hidden rounded-xl bg-surface-container bento-card-glow">
-                                <img 
-                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
-                                    src={article.imageUrl || "https://picsum.photos/seed/feed/400/300"} 
-                                    alt={article.title}
-                                />
-                                <div className="absolute top-3 left-3 bg-background/60 backdrop-blur-md px-2 py-1 rounded text-[10px] font-bold text-on-surface uppercase tracking-widest">
-                                    {article.category}
+                <AnimatePresence mode="wait">
+                    <motion.div 
+                        key={initialCategory + initialSearch}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.3 }}
+                        className="flex gap-gutter w-full"
+                    >
+                        {trendingStories.map((article) => (
+                            <motion.a 
+                                key={article.id}
+                                href={article.sourceUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex-none w-[calc(100%-16px)] sm:w-[calc(50%-12px)] lg:w-[calc(25%-18px)] snap-start flex flex-col gap-4 group"
+                            >
+                                <div className="relative aspect-[4/3] overflow-hidden rounded-xl bg-surface-container bento-card-glow">
+                                    <img 
+                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                                        src={article.imageUrl || "https://picsum.photos/seed/feed/400/300"} 
+                                        alt={article.title}
+                                    />
+                                    <div className="absolute top-3 left-3 bg-background/60 backdrop-blur-md px-2 py-1 rounded text-[10px] font-bold text-on-surface uppercase tracking-widest">
+                                        {article.category}
+                                    </div>
                                 </div>
-                            </div>
-                            <div className="flex flex-col gap-2">
-                                <h4 className="font-headline-md text-base font-bold text-on-surface group-hover:text-secondary transition-colors line-clamp-2">
-                                    {article.title}
-                                </h4>
-                                <div className="flex justify-between items-center font-data-point text-[10px] text-on-surface-variant uppercase tracking-wider">
-                                    <span>{article.source?.name}</span>
-                                    <span>{getRelativeTime(article.publishedAt)}</span>
+                                <div className="flex flex-col gap-2">
+                                    <h4 className="font-headline-md text-base font-bold text-on-surface group-hover:text-secondary transition-colors line-clamp-2">
+                                        {article.title}
+                                    </h4>
+                                    <div className="flex justify-between items-center font-data-point text-[10px] text-on-surface-variant uppercase tracking-wider">
+                                        <span>{article.source?.name}</span>
+                                        <span>{getRelativeTime(article.publishedAt)}</span>
+                                    </div>
                                 </div>
-                            </div>
-                        </motion.a>
-                    ))}
+                            </motion.a>
+                        ))}
+                    </motion.div>
                 </AnimatePresence>
             </div>
         </div>

@@ -2,6 +2,7 @@
 
 import NewsFeed from "@/components/NewsFeed";
 import IntelligenceMap from "@/components/IntelligenceMap";
+import LiveChart from "@/components/LiveChart";
 import { Suspense, useState, useEffect } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
@@ -14,6 +15,69 @@ export default function Home() {
   
   const [selectedArticle, setSelectedArticle] = useState<any>(null);
   const [sortBy, setSortBy] = useState<string>("latest");
+  const [mainView, setMainView] = useState<"map" | "chart">("map");
+  const [isAnalysisCollapsed, setIsAnalysisCollapsed] = useState<boolean>(false);
+  const [activeAnalysisTab, setActiveAnalysisTab] = useState<string>("sitrep");
+
+  // Simple intelligence engine to derive data from article content
+  const getArticleAnalysis = (article: any) => {
+    if (!article) return null;
+    
+    const text = (article.title + " " + (article.content || "")).toLowerCase();
+    const category = (article.category || "all").toLowerCase();
+    
+    // Default values
+    let volatility = "LOW";
+    let tension = "STABLE";
+    let bullishScore = 50;
+    let retailInterest = "MODERATE";
+    let whaleAccumulation = "STEADY";
+    let riskDescription = "Standard monitoring protocol active. No immediate outliers detected.";
+
+    // Logic based on category
+    if (category === "crypto") {
+      volatility = "HIGH";
+      bullishScore = text.includes("surge") || text.includes("gain") || text.includes("adopt") || text.includes("etf") ? 85 : 42;
+      retailInterest = text.includes("hype") || text.includes("trending") ? "FOMO" : bullishScore > 60 ? "STRONG" : "FEAR";
+      whaleAccumulation = text.includes("institution") || text.includes("whale") || text.includes("accumulate") ? "HEAVY" : "STEADY";
+    } else if (category === "politics") {
+      tension = text.includes("war") || text.includes("conflict") || text.includes("crisis") ? "CRITICAL" : "ELEVATED";
+      volatility = tension === "CRITICAL" ? "HIGH" : "MEDIUM";
+      bullishScore = tension === "CRITICAL" ? 20 : 45;
+      retailInterest = "CAUTIOUS";
+      whaleAccumulation = "HEDGING";
+    } else if (category === "energy") {
+      volatility = text.includes("oil") || text.includes("gas") ? "MEDIUM" : "LOW";
+      tension = text.includes("opec") || text.includes("supply") ? "ELEVATED" : "STABLE";
+      bullishScore = text.includes("shortage") || text.includes("price hike") ? 70 : 50;
+      retailInterest = "MODERATE";
+      whaleAccumulation = "POSITIONING";
+    }
+
+    // Keyword overrides for extreme Alpha events
+    if (text.includes("institutional adoption") || text.includes("major bank") || text.includes("partnership")) {
+      whaleAccumulation = "MASSIVE";
+      bullishScore = 92;
+      retailInterest = "FOMO";
+    }
+
+    if (text.includes("hack") || text.includes("exploit") || text.includes("scam")) {
+      whaleAccumulation = "EXITING";
+      bullishScore = 8;
+      retailInterest = "PANIC";
+    }
+
+    // Keyword overrides
+    if (text.includes("crisis") || text.includes("crash") || text.includes("warning")) {
+      volatility = "CRITICAL";
+      bullishScore = 15;
+      riskDescription = "Emergency risk alerts detected. High probability of systemic impact.";
+    }
+
+    return { volatility, tension, bullishScore, retailInterest, whaleAccumulation, riskDescription };
+  };
+
+  const analysisData = getArticleAnalysis(selectedArticle);
 
 
   // Reset selection when category changes
@@ -54,6 +118,26 @@ export default function Home() {
               </button>
             </div>
           </div>
+          <div className="h-4 w-[1px] bg-outline-variant/30"></div>
+          <div className="flex items-center gap-4">
+            <span className="font-label-caps text-[10px] text-on-surface-variant font-bold tracking-widest">DISPLAY VIEW:</span>
+            <div className="flex bg-surface-container-high rounded-full p-1 border border-outline-variant/20 shadow-inner">
+              <button 
+                onClick={() => setMainView("map")}
+                className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${mainView === 'map' ? 'bg-secondary text-on-secondary shadow-[0_0_12px_rgba(180,197,255,0.4)]' : 'text-on-surface-variant hover:text-on-surface'}`}
+              >
+                <span className="material-symbols-outlined text-[16px]">public</span>
+                Map
+              </button>
+              <button 
+                onClick={() => setMainView("chart")}
+                className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${mainView === 'chart' ? 'bg-secondary text-on-secondary shadow-[0_0_12px_rgba(180,197,255,0.4)]' : 'text-on-surface-variant hover:text-on-surface'}`}
+              >
+                <span className="material-symbols-outlined text-[16px]">show_chart</span>
+                Market
+              </button>
+            </div>
+          </div>
         </div>
         <div className="flex items-center gap-8">
           <div className="flex items-center gap-2 text-[11px] font-data-point">
@@ -87,10 +171,33 @@ export default function Home() {
         </section>
 
         {/* Main Command Display */}
-        <section className="col-span-12 lg:col-span-9 grid grid-rows-[1.4fr_0.6fr] overflow-hidden">
-        {/* Intelligence Map HUD */}
+        <section className={`col-span-12 lg:col-span-9 grid transition-all duration-500 ease-in-out ${isAnalysisCollapsed ? 'grid-rows-[1fr_48px]' : 'grid-rows-[1.4fr_0.6fr]'} overflow-hidden`}>
+        {/* Intelligence Map HUD / Live Chart */}
         <div className="row-span-1 relative group border-b border-outline-variant/20">
-          <IntelligenceMap />
+          <AnimatePresence mode="wait">
+            {mainView === "map" ? (
+              <motion.div 
+                key="map"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="w-full h-full"
+              >
+                <IntelligenceMap />
+              </motion.div>
+            ) : (
+              <motion.div 
+                key="chart"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="w-full h-full"
+              >
+                <LiveChart />
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           {/* Overlay Corner Accents */}
           <div className="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-secondary/30 pointer-events-none"></div>
           <div className="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-secondary/30 pointer-events-none"></div>
@@ -98,31 +205,59 @@ export default function Home() {
 
         {/* Deep Dive Analysis Panel */}
         <div className="row-span-1 bg-surface-container flex flex-col overflow-hidden relative">
-            <div className="flex border-b border-outline-variant/20 h-12 items-center px-8 gap-10 bg-surface-container-high/50 shrink-0">
-              <button className="font-label-caps text-[10px] text-secondary border-b-2 border-secondary h-full flex items-center font-black tracking-widest uppercase">Deep Dive Analysis</button>
-              <button className="font-label-caps text-[10px] text-on-surface-variant hover:text-on-surface transition-colors h-full flex items-center font-black tracking-widest uppercase">Correlated Events</button>
-              <button className="font-label-caps text-[10px] text-on-surface-variant hover:text-on-surface transition-colors h-full flex items-center font-black tracking-widest uppercase">Social Sentiment</button>
+            <div className="flex border-b border-outline-variant/20 h-12 items-center px-8 justify-between bg-surface-container-high/50 shrink-0">
+              <div className="flex gap-10 h-full">
+                <button 
+                  onClick={() => setActiveAnalysisTab("sitrep")}
+                  className={`font-label-caps text-[10px] h-full flex items-center font-black tracking-widest uppercase transition-all ${activeAnalysisTab === 'sitrep' ? 'text-secondary border-b-2 border-secondary' : 'text-on-surface-variant hover:text-on-surface'}`}
+                >
+                  Situation Report
+                </button>
+                <button 
+                  onClick={() => setActiveAnalysisTab("risk")}
+                  className={`font-label-caps text-[10px] h-full flex items-center font-black tracking-widest uppercase transition-all ${activeAnalysisTab === 'risk' ? 'text-secondary border-b-2 border-secondary' : 'text-on-surface-variant hover:text-on-surface'}`}
+                >
+                  Risk Assessment
+                </button>
+                <button 
+                  onClick={() => setActiveAnalysisTab("alpha")}
+                  className={`font-label-caps text-[10px] h-full flex items-center font-black tracking-widest uppercase transition-all ${activeAnalysisTab === 'alpha' ? 'text-secondary border-b-2 border-secondary' : 'text-on-surface-variant hover:text-on-surface'}`}
+                >
+                  Market Alpha
+                </button>
+              </div>
+              <button 
+                onClick={() => setIsAnalysisCollapsed(!isAnalysisCollapsed)}
+                className="w-8 h-8 flex items-center justify-center hover:bg-surface-variant/20 rounded-lg transition-all group"
+                title={isAnalysisCollapsed ? "Expand Analysis" : "Collapse Analysis"}
+              >
+                <span className={`material-symbols-outlined text-[20px] text-outline group-hover:text-secondary transition-transform duration-500 ${isAnalysisCollapsed ? 'rotate-180' : ''}`}>
+                  keyboard_arrow_down
+                </span>
+              </button>
             </div>
             
             <div className="flex-1 p-8 grid grid-cols-12 gap-10 overflow-y-auto no-scrollbar">
               <AnimatePresence mode="wait">
                 {selectedArticle ? (
                   <motion.div 
-                    key={selectedArticle.id}
-                    initial={{ opacity: 0, y: 10, scale: 0.99 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: -10, scale: 0.99 }}
-                    transition={{ duration: 0.3, ease: "easeOut" }}
+                    key={`${selectedArticle.id}-${activeAnalysisTab}`}
+                    initial={{ opacity: 0, x: 10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -10 }}
+                    transition={{ duration: 0.2 }}
                     className="col-span-12 grid grid-cols-12 gap-10"
                   >
                     <div className="col-span-12 lg:col-span-8 space-y-8">
-                    <div className="flex items-center gap-6">
-                      <div className="w-20 h-20 rounded-2xl overflow-hidden border border-outline-variant/30 shadow-2xl relative group">
-                        <img className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" src={selectedArticle.imageUrl || "https://picsum.photos/seed/analysis/400/400"} alt="Analysis" />
-                        <div className="absolute inset-0 bg-secondary/10"></div>
-                      </div>
+                      {activeAnalysisTab === "sitrep" && (
+                        <>
+                          <div className="flex items-center gap-6">
+                            <div className="w-20 h-20 rounded-2xl overflow-hidden border border-outline-variant/30 shadow-2xl relative group">
+                              <img className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" src={selectedArticle.imageUrl || "https://picsum.photos/seed/analysis/400/400"} alt="Analysis" />
+                              <div className="absolute inset-0 bg-secondary/10"></div>
+                            </div>
                             <div className="flex flex-col">
-                              <h4 className="font-headline-sm text-xl font-black text-on-surface tracking-tight group-hover:text-secondary transition-colors line-clamp-2">
+                              <h4 className="font-headline-sm text-xl font-black text-on-surface tracking-tight line-clamp-2">
                                 {selectedArticle.title}
                               </h4>
                               <div className="flex items-center gap-3 mt-1.5">
@@ -136,19 +271,72 @@ export default function Home() {
                                 </span>
                               </div>
                             </div>
-                    </div>
-                    
-                    <div className="prose prose-invert max-w-none text-on-surface-variant leading-relaxed font-body-lg text-lg">
-                      {selectedArticle.content ? (
-                        <p className="mb-6">{selectedArticle.content}</p>
-                      ) : (
-                        <p className="mb-6 italic">No deep dive analysis available for this intelligence report. Please refer to the source URL for full coverage.</p>
+                          </div>
+                          
+                          <div className="prose prose-invert max-w-none text-on-surface-variant leading-relaxed font-body-lg text-lg">
+                            {selectedArticle.content ? (
+                              <p className="mb-6">{selectedArticle.content}</p>
+                            ) : (
+                              <p className="mb-6 italic">No SITREP data available for this intelligence node.</p>
+                            )}
+                            <a href={selectedArticle.sourceUrl} target="_blank" rel="noopener noreferrer" className="text-secondary hover:underline font-bold text-sm uppercase tracking-widest flex items-center gap-2">
+                              View Full Report <span className="material-symbols-outlined text-[16px]">open_in_new</span>
+                            </a>
+                          </div>
+                        </>
                       )}
-                      <a href={selectedArticle.sourceUrl} target="_blank" rel="noopener noreferrer" className="text-secondary hover:underline font-bold text-sm uppercase tracking-widest flex items-center gap-2">
-                        View Full Report <span className="material-symbols-outlined text-[16px]">open_in_new</span>
-                      </a>
+
+                      {activeAnalysisTab === "risk" && analysisData && (
+                        <div className="space-y-6">
+                          <h4 className="font-headline-sm text-xl font-black text-on-surface tracking-tight uppercase">Intelligence Risk Assessment</h4>
+                          <div className="grid grid-cols-2 gap-6">
+                            <div className="p-5 bg-surface-variant/20 rounded-2xl border border-outline-variant/20">
+                              <p className="font-label-caps text-[10px] text-outline mb-2 uppercase font-black">Volatility Impact</p>
+                              <p className={`text-2xl font-black ${analysisData.volatility === 'CRITICAL' ? 'text-error' : analysisData.volatility === 'HIGH' ? 'text-secondary' : 'text-on-surface'}`}>{analysisData.volatility}</p>
+                              <p className="text-[11px] text-on-surface-variant mt-2">Expected movement based on {selectedArticle.category} sector volatility.</p>
+                            </div>
+                            <div className="p-5 bg-surface-variant/20 rounded-2xl border border-outline-variant/20">
+                              <p className="font-label-caps text-[10px] text-outline mb-2 uppercase font-black">Geopolitical Tension</p>
+                              <p className={`text-2xl font-black ${analysisData.tension === 'CRITICAL' ? 'text-error' : analysisData.tension === 'ELEVATED' ? 'text-secondary' : 'text-on-surface'}`}>{analysisData.tension}</p>
+                              <p className="text-[11px] text-on-surface-variant mt-2">Regional stability index for current intelligence node.</p>
+                            </div>
+                          </div>
+                          <div className="p-6 bg-surface-container-high/40 rounded-2xl border border-outline-variant/10">
+                            <p className="text-sm text-on-surface leading-relaxed">{analysisData.riskDescription}</p>
+                          </div>
+                        </div>
+                      )}
+
+                      {activeAnalysisTab === "alpha" && analysisData && (
+                        <div className="space-y-6">
+                          <h4 className="font-headline-sm text-xl font-black text-on-surface tracking-tight uppercase">Market Alpha & Sentiment</h4>
+                          <div className="flex items-center gap-8 p-6 bg-surface-container-high/40 rounded-2xl border border-outline-variant/10">
+                            <div className="flex flex-col items-center">
+                              <div className={`w-16 h-16 rounded-full border-4 ${analysisData.bullishScore > 50 ? 'border-secondary' : 'border-error'} flex items-center justify-center mb-2`}>
+                                <span className={`text-xl font-black ${analysisData.bullishScore > 50 ? 'text-secondary' : 'text-error'}`}>{analysisData.bullishScore}%</span>
+                              </div>
+                              <span className="text-[10px] font-black text-outline uppercase">Sentiment Score</span>
+                            </div>
+                            <div className="flex-1 space-y-3">
+                              <div className="flex justify-between items-center text-[11px]">
+                                <span className="font-bold text-on-surface">Retail Interest</span>
+                                <span className={`${analysisData.bullishScore > 50 ? 'text-secondary' : 'text-error'} font-black`}>{analysisData.retailInterest}</span>
+                              </div>
+                              <div className="w-full h-1.5 bg-background rounded-full overflow-hidden">
+                                <div className={`h-full ${analysisData.bullishScore > 50 ? 'bg-secondary' : 'bg-error'}`} style={{ width: `${analysisData.bullishScore}%` }}></div>
+                              </div>
+                              <div className="flex justify-between items-center text-[11px]">
+                                <span className="font-bold text-on-surface">Whale Accumulation</span>
+                                <span className="text-outline font-black">{analysisData.whaleAccumulation}</span>
+                              </div>
+                              <div className="w-full h-1.5 bg-background rounded-full overflow-hidden">
+                                <div className="w-[55%] h-full bg-outline"></div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
-                  </div>
 
                   <div className="col-span-12 lg:col-span-4 space-y-6">
                     <div className="bg-surface-container-high/60 backdrop-blur-md rounded-2xl p-6 border border-outline-variant/20 shadow-xl">

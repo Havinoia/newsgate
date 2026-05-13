@@ -219,12 +219,7 @@ export default function Home() {
                 >
                   Risk Assessment
                 </button>
-                <button 
-                  onClick={() => setActiveAnalysisTab("alpha")}
-                  className={`font-label-caps text-[10px] h-full flex items-center font-black tracking-widest uppercase transition-all ${activeAnalysisTab === 'alpha' ? 'text-secondary border-b-2 border-secondary' : 'text-on-surface-variant hover:text-on-surface'}`}
-                >
-                  Market Alpha
-                </button>
+
               </div>
               <button 
                 onClick={() => setIsAnalysisCollapsed(!isAnalysisCollapsed)}
@@ -306,52 +301,22 @@ export default function Home() {
                           </div>
                         </div>
                       )}
-
-                      {activeAnalysisTab === "alpha" && analysisData && (
-                        <div className="space-y-6">
-                          <h4 className="font-headline-sm text-xl font-black text-on-surface tracking-tight uppercase">Market Alpha & Sentiment</h4>
-                          <div className="flex items-center gap-8 p-6 bg-surface-container-high/40 rounded-2xl border border-outline-variant/10">
-                            <div className="flex flex-col items-center">
-                              <div className={`w-16 h-16 rounded-full border-4 ${analysisData.bullishScore > 50 ? 'border-secondary' : 'border-error'} flex items-center justify-center mb-2`}>
-                                <span className={`text-xl font-black ${analysisData.bullishScore > 50 ? 'text-secondary' : 'text-error'}`}>{analysisData.bullishScore}%</span>
-                              </div>
-                              <span className="text-[10px] font-black text-outline uppercase">Sentiment Score</span>
-                            </div>
-                            <div className="flex-1 space-y-3">
-                              <div className="flex justify-between items-center text-[11px]">
-                                <span className="font-bold text-on-surface">Retail Interest</span>
-                                <span className={`${analysisData.bullishScore > 50 ? 'text-secondary' : 'text-error'} font-black`}>{analysisData.retailInterest}</span>
-                              </div>
-                              <div className="w-full h-1.5 bg-background rounded-full overflow-hidden">
-                                <div className={`h-full ${analysisData.bullishScore > 50 ? 'bg-secondary' : 'bg-error'}`} style={{ width: `${analysisData.bullishScore}%` }}></div>
-                              </div>
-                              <div className="flex justify-between items-center text-[11px]">
-                                <span className="font-bold text-on-surface">Whale Accumulation</span>
-                                <span className="text-outline font-black">{analysisData.whaleAccumulation}</span>
-                              </div>
-                              <div className="w-full h-1.5 bg-background rounded-full overflow-hidden">
-                                <div className="w-[55%] h-full bg-outline"></div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      )}
                     </div>
 
-                  <div className="col-span-12 lg:col-span-4 space-y-6">
-                    <div className="bg-surface-container-high/60 backdrop-blur-md rounded-2xl p-6 border border-outline-variant/20 shadow-xl">
-                      <h6 className="font-label-caps text-[10px] text-outline mb-4 uppercase tracking-[0.2em] font-black">Related Entities</h6>
-                      <div className="flex flex-wrap gap-2">
-                        {[selectedArticle.category, selectedArticle.source?.name, "GLOBAL INTEL"].map(entity => (
-                          <span key={entity} className="px-3 py-1.5 bg-surface-variant/40 text-[9px] font-black rounded-lg border border-outline-variant/20 hover:border-secondary/40 hover:bg-secondary/10 transition-all cursor-default uppercase tracking-wider">
-                            {entity}
-                          </span>
-                        ))}
+                    <div className="col-span-12 lg:col-span-4 space-y-6">
+                      <div className="bg-surface-container-high/60 backdrop-blur-md rounded-2xl p-6 border border-outline-variant/20 shadow-xl">
+                        <h6 className="font-label-caps text-[10px] text-outline mb-4 uppercase tracking-[0.2em] font-black">Related Entities</h6>
+                        <div className="flex flex-wrap gap-2">
+                          {[selectedArticle.category, selectedArticle.source?.name, "GLOBAL INTEL"].map(entity => (
+                            <span key={entity} className="px-3 py-1.5 bg-surface-variant/40 text-[9px] font-black rounded-lg border border-outline-variant/20 hover:border-secondary/40 hover:bg-secondary/10 transition-all cursor-default uppercase tracking-wider">
+                              {entity}
+                            </span>
+                          ))}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </motion.div>
-              ) : (
+                  </motion.div>
+                ) : (
                   <motion.div 
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}

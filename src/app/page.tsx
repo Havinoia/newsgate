@@ -155,9 +155,8 @@ export default function Home() {
       <div className="flex-1 grid grid-cols-12 overflow-hidden">
         {/* Left Side: Intelligence Stream */}
         <section className="col-span-12 lg:col-span-3 border-r border-outline-variant/20 flex flex-col bg-surface-container-low/30 backdrop-blur-md overflow-hidden">
-          <div className="p-4 border-b border-outline-variant/10 flex justify-between items-center bg-surface-container-low/50">
+          <div className="p-4 border-b border-outline-variant/10 flex items-center bg-surface-container-low/50">
             <h3 className="font-headline-md text-sm text-on-surface uppercase tracking-[0.1em] font-black">Intelligence Stream</h3>
-            <span className="material-symbols-outlined text-outline text-[18px]">filter_list</span>
           </div>
           <Suspense fallback={<div className="p-8 text-center animate-pulse text-outline font-label-caps text-[10px]">Syncing with global nodes...</div>}>
             <NewsFeed 

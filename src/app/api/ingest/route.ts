@@ -41,6 +41,48 @@ export async function POST(req: Request) {
 
         const supabase = createClient(supabaseUrl, supabaseServiceRoleKey);
 
+        // 1.5 Resolve Sources
+        // Map source names/IDs to actual source UUIDs
+        const uniqueSourceIdentifiers = Array.from(new Set(incomingArticles.map(a => a.sourceId)));
+        const sourceMap: Record<string, string> = {};
+
+        for (const identifier of uniqueSourceIdentifiers) {
+            // Check if identifier is already a valid UUID
+            const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(identifier);
+            
+            if (isUUID) {
+                sourceMap[identifier] = identifier;
+                continue;
+            }
+
+            // Try to find existing source by name
+            const { data: existingSource } = await supabase
+                .from('news_source')
+                .select('id')
+                .eq('name', identifier)
+                .maybeSingle();
+
+            if (existingSource) {
+                sourceMap[identifier] = existingSource.id;
+            } else {
+                // Create new source if not found
+                const { data: newSource, error: createError } = await supabase
+                    .from('news_source')
+                    .insert({ 
+                        name: identifier,
+                        icon_url: `https://ui-avatars.com/api/?name=${encodeURIComponent(identifier)}&background=random`
+                    })
+                    .select('id')
+                    .single();
+
+                if (newSource) {
+                    sourceMap[identifier] = newSource.id;
+                } else {
+                    console.error(`Failed to resolve source: ${identifier}`, createError);
+                }
+            }
+        }
+
         // Prepare data for upsert
         const articlesToUpsert = incomingArticles.map((article: any) => {
             const text = (article.title + " " + (article.content || "")).toLowerCase();
@@ -72,7 +114,7 @@ export async function POST(req: Request) {
                 source_url: article.sourceUrl,
                 image_url: article.imageUrl,
                 category: article.category,
-                source_id: article.sourceId,
+                source_id: sourceMap[article.sourceId] || null, // Use resolved UUID
                 published_at: new Date(article.publishedAt).toISOString(),
                 sentiment_score: Math.min(Math.round(impactScore), 100),
             };

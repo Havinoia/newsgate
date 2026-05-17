@@ -94,9 +94,6 @@ export default function Navbar() {
         </form>
 
         <div className="flex items-center gap-2 relative">
-          <button className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-variant/50 text-on-surface-variant hover:text-on-surface transition-all active:scale-90">
-            <span className="material-symbols-outlined text-[20px]">monitoring</span>
-          </button>
           
           <div className="relative" ref={notificationRef}>
             <button 

@@ -18,6 +18,7 @@ export default function Home() {
   const [mainView, setMainView] = useState<"map" | "chart">("map");
   const [isAnalysisCollapsed, setIsAnalysisCollapsed] = useState<boolean>(false);
   const [activeAnalysisTab, setActiveAnalysisTab] = useState<string>("sitrep");
+  const [isCopied, setIsCopied] = useState<boolean>(false);
 
   // Simple intelligence engine to derive data from article content
   const getArticleAnalysis = (article: any) => {
@@ -273,9 +274,21 @@ export default function Home() {
                             ) : (
                               <p className="mb-6 italic">No SITREP data available for this intelligence node.</p>
                             )}
-                            <a href={selectedArticle.sourceUrl} target="_blank" rel="noopener noreferrer" className="text-secondary hover:underline font-bold text-sm uppercase tracking-widest flex items-center gap-2">
-                              View Full Report <span className="material-symbols-outlined text-[16px]">open_in_new</span>
-                            </a>
+                            <div className="flex items-center gap-6">
+                              <a href={selectedArticle.sourceUrl} target="_blank" rel="noopener noreferrer" className="text-secondary hover:underline font-bold text-sm uppercase tracking-widest flex items-center gap-2">
+                                View Full Report <span className="material-symbols-outlined text-[16px]">open_in_new</span>
+                              </a>
+                              <button 
+                                onClick={() => {
+                                  navigator.clipboard.writeText(selectedArticle.sourceUrl || "");
+                                  setIsCopied(true);
+                                  setTimeout(() => setIsCopied(false), 2000);
+                                }}
+                                className={`${isCopied ? 'text-green-400' : 'text-on-surface-variant hover:text-secondary'} font-bold text-sm uppercase tracking-widest flex items-center gap-2 transition-colors`}
+                              >
+                                {isCopied ? "Link Copied" : "Copy Intel Link"} <span className="material-symbols-outlined text-[16px]">{isCopied ? "check" : "content_copy"}</span>
+                              </button>
+                            </div>
                           </div>
                         </>
                       )}

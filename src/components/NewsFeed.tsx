@@ -142,6 +142,10 @@ export default function NewsFeed({
                                     <span className="material-symbols-outlined text-[14px]">share</span> 
                                     {article.source?.name?.toUpperCase() || "SOURCE"}
                                 </span>
+                                <span className="flex items-center gap-1">
+                                    <span className="material-symbols-outlined text-[14px]">menu_book</span> 
+                                    {Math.max(1, Math.ceil((article.content?.split(/\s+/).length || 0) / 200))} MIN READ
+                                </span>
                             </div>
 
                             {isSelected && (

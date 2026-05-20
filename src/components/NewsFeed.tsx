@@ -48,7 +48,7 @@ export default function NewsFeed({
             throw new Error(res.error);
         },
         placeholderData: (previousData) => previousData,
-        staleTime: 60 * 1000 * 5, // 5 menit cache
+        refetchInterval: 5000, // Fetch every 5 seconds for genuine real-time updates
     });
 
     // Auto-select first article on load

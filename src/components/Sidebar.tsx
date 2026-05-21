@@ -2,16 +2,18 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useSidebar } from "@/components/Providers";
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const { isSidebarCollapsed } = useSidebar();
 
   const navItems = [
     { name: "Terminal", icon: "terminal", href: "/", active: true },
   ];
 
   return (
-    <aside className="fixed left-0 top-16 bottom-0 flex flex-col justify-between py-6 px-4 w-64 border-r border-outline-variant/20 bg-surface-container-low/60 backdrop-blur-xl shadow-2xl shadow-background/50 z-40 hidden lg:flex">
+    <aside className={`fixed left-0 top-16 bottom-0 flex flex-col justify-between py-6 px-4 w-64 border-r border-outline-variant/20 bg-surface-container-low/60 backdrop-blur-xl shadow-2xl shadow-background/50 z-40 hidden lg:flex transition-all duration-300 ease-in-out ${isSidebarCollapsed ? "-translate-x-full" : "translate-x-0"}`}>
       <div className="space-y-2">
         <div className="px-3 mb-6">
           <p className="font-label-caps text-[10px] text-outline uppercase tracking-widest">Command Center</p>

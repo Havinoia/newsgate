@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
-import { Suspense, useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useSidebar } from "@/components/Providers";
 
 function NavLinks() {
   const searchParams = useSearchParams();
@@ -41,6 +42,7 @@ function NavLinks() {
 export default function Navbar() {
   const [searchQuery, setSearchQuery] = useState("");
   const router = useRouter();
+  const { isSidebarCollapsed, toggleSidebar } = useSidebar();
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,7 +56,16 @@ export default function Navbar() {
 
   return (
     <header className="fixed top-0 w-full z-50 bg-surface/80 backdrop-blur-2xl border-b border-outline-variant/30 h-16 flex justify-between items-center px-margin-mobile md:px-margin-desktop shadow-2xl shadow-black/20">
-      <div className="flex items-center gap-10">
+      <div className="flex items-center gap-6">
+        <button 
+          onClick={toggleSidebar}
+          className="hidden lg:flex w-10 h-10 items-center justify-center rounded-full hover:bg-surface-variant/40 text-on-surface-variant hover:text-on-surface transition-all active:scale-90 border border-outline-variant/15 mr-1"
+          title={isSidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+        >
+          <span className="material-symbols-outlined text-[20px] transition-transform duration-300">
+            {isSidebarCollapsed ? "menu" : "menu_open"}
+          </span>
+        </button>
         <Link className="text-2xl font-black tracking-tighter text-on-surface hover:text-secondary transition-colors" href="/">
           NewsGate
         </Link>

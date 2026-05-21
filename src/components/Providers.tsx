@@ -1,9 +1,27 @@
 "use client";
 
+import { createContext, useContext, useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { useState } from "react";
+
+interface SidebarContextType {
+    isSidebarCollapsed: boolean;
+    setSidebarCollapsed: (val: boolean) => void;
+    toggleSidebar: () => void;
+}
+
+const SidebarContext = createContext<SidebarContextType | undefined>(undefined);
+
+export function useSidebar() {
+    const context = useContext(SidebarContext);
+    if (!context) {
+        throw new Error("useSidebar must be used within a Providers component");
+    }
+    return context;
+}
 
 export default function Providers({ children }: { children: React.ReactNode }) {
+    const [isSidebarCollapsed, setSidebarCollapsed] = useState(false);
+    
     const [queryClient] = useState(() => new QueryClient({
         defaultOptions: {
             queries: {
@@ -13,9 +31,13 @@ export default function Providers({ children }: { children: React.ReactNode }) {
         },
     }));
 
+    const toggleSidebar = () => setSidebarCollapsed(prev => !prev);
+
     return (
         <QueryClientProvider client={queryClient}>
-            {children}
+            <SidebarContext.Provider value={{ isSidebarCollapsed, setSidebarCollapsed, toggleSidebar }}>
+                {children}
+            </SidebarContext.Provider>
         </QueryClientProvider>
     );
 }

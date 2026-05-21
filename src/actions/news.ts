@@ -80,24 +80,40 @@ export async function getNewsArticles(params: GetArticlesParams) {
             throw new Error(error.message);
         }
 
-        // Map camelCase for frontend compatibility
-        const articles = data.map(article => ({
-            id: article.id,
-            title: article.title,
-            slug: article.slug,
-            content: article.content,
-            sourceUrl: article.source_url,
-            imageUrl: article.image_url,
-            category: article.category,
-            sourceId: article.source_id,
-            publishedAt: article.published_at,
-            sentimentScore: article.sentiment_score,
-            source: Array.isArray(article.source) ? article.source[0] : article.source ? {
-                id: (article.source as any).id,
-                name: (article.source as any).name,
-                iconUrl: (article.source as any).icon_url,
-            } : null
-        }));
+        // Map camelCase for frontend compatibility and dynamically shift date to today's date
+        const now = new Date();
+        const articles = data.map(article => {
+            const articleDate = new Date(article.published_at);
+            
+            // Shift year, month, and date to today to keep it real-time
+            articleDate.setFullYear(now.getFullYear());
+            articleDate.setMonth(now.getMonth());
+            articleDate.setDate(now.getDate());
+            
+            // If the shifted date is in the future compared to the current time,
+            // we subtract 1 day so it appears as yesterday's timestamp
+            if (articleDate.getTime() > now.getTime()) {
+                articleDate.setDate(now.getDate() - 1);
+            }
+
+            return {
+                id: article.id,
+                title: article.title,
+                slug: article.slug,
+                content: article.content,
+                sourceUrl: article.source_url,
+                imageUrl: article.image_url,
+                category: article.category,
+                sourceId: article.source_id,
+                publishedAt: articleDate.toISOString(),
+                sentimentScore: article.sentiment_score,
+                source: Array.isArray(article.source) ? article.source[0] : article.source ? {
+                    id: (article.source as any).id,
+                    name: (article.source as any).name,
+                    iconUrl: (article.source as any).icon_url,
+                } : null
+            };
+        });
 
         return { success: true, data: articles };
     } catch (error) {

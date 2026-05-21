@@ -1,6 +1,6 @@
 "use client";
-
-import { useEffect, useRef } from "react";
+ 
+import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getNewsArticles } from "@/actions/news";
 import { motion, AnimatePresence } from "framer-motion";
@@ -35,14 +35,22 @@ export default function NewsFeed({
     onSelectArticle,
     selectedArticleId
 }: NewsFeedProps) {
-    // TanStack Query untuk fetching data
+    const [limit, setLimit] = useState<number>(20);
+
+    // Reset limit when filter changes
+    useEffect(() => {
+        setLimit(20);
+    }, [initialCategory, initialSearch, sortBy]);
+
+    // TanStack Query untuk fetching data dengan limit dinamis
     const { data: articles, refetch, isFetching } = useQuery({
-        queryKey: ["articles", initialCategory, initialSearch, sortBy],
+        queryKey: ["articles", initialCategory, initialSearch, sortBy, limit],
         queryFn: async () => {
             const res = await getNewsArticles({ 
                 category: initialCategory, 
                 query: initialSearch,
-                sortBy: sortBy
+                sortBy: sortBy,
+                limit: limit
             });
             if (res.success) return res.data;
             throw new Error(res.error);
@@ -50,6 +58,17 @@ export default function NewsFeed({
         placeholderData: (previousData) => previousData,
         refetchInterval: 5000, // Fetch every 5 seconds for genuine real-time updates
     });
+
+    const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+        const target = e.currentTarget;
+        // Pemicu ketika discroll mendekati bawah (threshold 20px)
+        if (target.scrollHeight - target.scrollTop <= target.clientHeight + 20) {
+            if (!isFetching) {
+                // Tambah limit untuk mengambil berita lebih lama (hingga 7 hari ke belakang)
+                setLimit((prev) => prev + 15);
+            }
+        }
+    };
 
     // Auto-select first article on load
     useEffect(() => {
@@ -143,7 +162,10 @@ export default function NewsFeed({
                 </button>
             </div>
 
-            <div className={`flex-1 flex flex-col overflow-y-auto no-scrollbar transition-opacity duration-300 ${isFetching ? 'opacity-50' : 'opacity-100'}`}>
+            <div 
+                onScroll={handleScroll}
+                className="flex-1 flex flex-col overflow-y-auto no-scrollbar"
+            >
                 <AnimatePresence mode="popLayout">
                     {articles.map((article, index) => {
                         const isSelected = selectedArticleId === article.id;
@@ -201,6 +223,13 @@ export default function NewsFeed({
                         );
                     })}
                 </AnimatePresence>
+
+                {isFetching && articles.length > 0 && (
+                    <div className="p-4 text-center text-[10px] font-label-caps text-secondary animate-pulse flex items-center justify-center gap-2 border-t border-outline-variant/10 bg-surface-container-low/20">
+                        <span className="material-symbols-outlined text-[14px] animate-spin">sync</span>
+                        RETRIEVING OLDER INTELLIGENCE NODES...
+                    </div>
+                )}
             </div>
         </div>
     );

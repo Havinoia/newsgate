@@ -80,21 +80,29 @@ export async function getNewsArticles(params: GetArticlesParams) {
             throw new Error(error.message);
         }
 
-        // Map camelCase for frontend compatibility and dynamically shift date to today's date
+        // Get the absolute latest article's timestamp in the database to act as the global anchor.
+        // This ensures consistent age calculations regardless of search, category filters, or sort modes.
+        let anchorTimestamp = new Date().getTime();
+        try {
+            const { data: latestArt } = await supabase
+                .from('news_article')
+                .select('published_at')
+                .order('published_at', { ascending: false })
+                .limit(1);
+            if (latestArt && latestArt[0]) {
+                anchorTimestamp = new Date(latestArt[0].published_at).getTime();
+            }
+        } catch (e) {
+            console.error("Failed to query anchor timestamp:", e);
+        }
+
         const now = new Date();
         const articles = data.map(article => {
-            const articleDate = new Date(article.published_at);
-            
-            // Shift year, month, and date to today to keep it real-time
-            articleDate.setFullYear(now.getFullYear());
-            articleDate.setMonth(now.getMonth());
-            articleDate.setDate(now.getDate());
-            
-            // If the shifted date is in the future compared to the current time,
-            // we subtract 1 day so it appears as yesterday's timestamp
-            if (articleDate.getTime() > now.getTime()) {
-                articleDate.setDate(now.getDate() - 1);
-            }
+            const articleTime = new Date(article.published_at).getTime();
+            // Calculate relative age based on global anchor
+            const ageInMs = anchorTimestamp - articleTime;
+            // Shift article date relative to 'now'
+            const shiftedDate = new Date(now.getTime() - ageInMs);
 
             return {
                 id: article.id,
@@ -105,7 +113,7 @@ export async function getNewsArticles(params: GetArticlesParams) {
                 imageUrl: article.image_url,
                 category: article.category,
                 sourceId: article.source_id,
-                publishedAt: articleDate.toISOString(),
+                publishedAt: shiftedDate.toISOString(),
                 sentimentScore: article.sentiment_score,
                 source: Array.isArray(article.source) ? article.source[0] : article.source ? {
                     id: (article.source as any).id,

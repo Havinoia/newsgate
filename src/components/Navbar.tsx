@@ -80,7 +80,7 @@ export default function Navbar() {
 
 
           <button className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-variant/50 text-on-surface-variant hover:text-on-surface transition-all active:scale-90 overflow-hidden border border-outline-variant/20">
-            <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" alt="User" className="w-full h-full object-cover" />
+            <span className="material-symbols-outlined text-[20px]">person</span>
           </button>
         </div>
       </div>

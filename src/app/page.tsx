@@ -19,6 +19,55 @@ export default function Home() {
   const [isAnalysisCollapsed, setIsAnalysisCollapsed] = useState<boolean>(false);
   const [activeAnalysisTab, setActiveAnalysisTab] = useState<string>("sitrep");
   const [isCopied, setIsCopied] = useState<boolean>(false);
+  const [isPlayingAudio, setIsPlayingAudio] = useState<boolean>(false);
+  const [isPausedAudio, setIsPausedAudio] = useState<boolean>(false);
+
+  // Stop speaking when article changes or component unmounts
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+      setIsPlayingAudio(false);
+      setIsPausedAudio(false);
+    }
+  }, [selectedArticle]);
+
+  const handlePlayAudio = () => {
+    if (typeof window === "undefined" || !window.speechSynthesis) return;
+
+    if (isPlayingAudio) {
+      if (isPausedAudio) {
+        window.speechSynthesis.resume();
+        setIsPausedAudio(false);
+      } else {
+        window.speechSynthesis.pause();
+        setIsPausedAudio(true);
+      }
+    } else {
+      window.speechSynthesis.cancel();
+      const textToSpeak = `${selectedArticle.title}. Source: ${selectedArticle.source?.name || "NewsGate System"}. Report contents: ${selectedArticle.content || "No contents available."}`;
+      const utterance = new SpeechSynthesisUtterance(textToSpeak);
+      
+      utterance.onend = () => {
+        setIsPlayingAudio(false);
+        setIsPausedAudio(false);
+      };
+      utterance.onerror = () => {
+        setIsPlayingAudio(false);
+        setIsPausedAudio(false);
+      };
+
+      window.speechSynthesis.speak(utterance);
+      setIsPlayingAudio(true);
+      setIsPausedAudio(false);
+    }
+  };
+
+  const handleStopAudio = () => {
+    if (typeof window === "undefined" || !window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    setIsPlayingAudio(false);
+    setIsPausedAudio(false);
+  };
 
   // Simple intelligence engine to derive data from article content
   const getArticleAnalysis = (article: any) => {
@@ -274,7 +323,7 @@ export default function Home() {
                             ) : (
                               <p className="mb-6 italic">No SITREP data available for this intelligence node.</p>
                             )}
-                            <div className="flex items-center gap-6">
+                            <div className="flex items-center flex-wrap gap-6 border-t border-outline-variant/10 pt-6">
                               <a href={selectedArticle.sourceUrl} target="_blank" rel="noopener noreferrer" className="text-secondary hover:underline font-bold text-sm uppercase tracking-widest flex items-center gap-2">
                                 View Full Report <span className="material-symbols-outlined text-[16px]">open_in_new</span>
                               </a>
@@ -288,6 +337,42 @@ export default function Home() {
                               >
                                 {isCopied ? "Link Copied" : "Copy Intel Link"} <span className="material-symbols-outlined text-[16px]">{isCopied ? "check" : "content_copy"}</span>
                               </button>
+
+                              <div className="h-4 w-[1px] bg-outline-variant/30 hidden md:block"></div>
+
+                              <div className="flex items-center gap-3">
+                                <button 
+                                  onClick={handlePlayAudio}
+                                  className={`${isPlayingAudio && !isPausedAudio ? 'text-secondary font-black' : 'text-on-surface-variant hover:text-secondary'} font-bold text-sm uppercase tracking-widest flex items-center gap-2 transition-all active:scale-95`}
+                                >
+                                  {isPlayingAudio && !isPausedAudio ? (
+                                    <>
+                                      <span>Briefing Active</span>
+                                      {/* Animated audio wave bars */}
+                                      <div className="flex items-end gap-[3px] h-3.5 w-6">
+                                        <span className="w-[3px] bg-secondary rounded-full animate-pulse h-full"></span>
+                                        <span className="w-[3px] bg-secondary rounded-full animate-pulse h-2.5" style={{ animationDelay: '0.15s' }}></span>
+                                        <span className="w-[3px] bg-secondary rounded-full animate-pulse h-4" style={{ animationDelay: '0.3s' }}></span>
+                                        <span className="w-[3px] bg-secondary rounded-full animate-pulse h-2" style={{ animationDelay: '0.45s' }}></span>
+                                      </div>
+                                    </>
+                                  ) : isPausedAudio ? (
+                                    <>Resume Briefing <span className="material-symbols-outlined text-[18px]">play_arrow</span></>
+                                  ) : (
+                                    <>Listen Briefing <span className="material-symbols-outlined text-[18px]">volume_up</span></>
+                                  )}
+                                </button>
+                                
+                                {isPlayingAudio && (
+                                  <button 
+                                    onClick={handleStopAudio}
+                                    className="text-error hover:text-error/80 font-bold text-sm uppercase tracking-widest flex items-center gap-2 transition-colors active:scale-95"
+                                    title="Stop Briefing"
+                                  >
+                                    <span className="material-symbols-outlined text-[18px]">stop</span>
+                                  </button>
+                                )}
+                              </div>
                             </div>
                           </div>
                         </>
@@ -316,6 +401,61 @@ export default function Home() {
                     </div>
 
                     <div className="col-span-12 lg:col-span-4 space-y-6">
+                      {/* Sentiment & Flow Indicators */}
+                      {analysisData && (
+                        <div className="bg-surface-container-high/60 backdrop-blur-md rounded-2xl p-6 border border-outline-variant/20 shadow-xl space-y-5">
+                          <h6 className="font-label-caps text-[10px] text-outline uppercase tracking-[0.2em] font-black">Market Sentiment & Flows</h6>
+                          
+                          {/* Sentiment Meter */}
+                          <div className="space-y-2">
+                            <div className="flex justify-between items-center text-xs">
+                              <span className="font-medium text-on-surface-variant">Bullish Sentiment</span>
+                              <span className="font-black font-data-point text-secondary">{analysisData.bullishScore}%</span>
+                            </div>
+                            <div className="h-2 w-full bg-surface-variant/40 rounded-full overflow-hidden border border-outline-variant/10 relative">
+                              <motion.div 
+                                className="h-full bg-gradient-to-r from-red-500 via-amber-500 to-emerald-500 rounded-full shadow-[0_0_8px_rgba(180,197,255,0.4)]"
+                                initial={{ width: 0 }}
+                                animate={{ width: `${analysisData.bullishScore}%` }}
+                                transition={{ duration: 0.8, ease: "easeOut" }}
+                              />
+                            </div>
+                            <div className="flex justify-between text-[9px] font-label-caps text-outline">
+                              <span>BEARISH</span>
+                              <span>NEUTRAL</span>
+                              <span>BULLISH</span>
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-4 pt-2 border-t border-outline-variant/10">
+                            <div className="space-y-1">
+                              <span className="font-label-caps text-[9px] text-outline block uppercase tracking-wider">Whale Action</span>
+                              <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-black border uppercase tracking-wider ${
+                                analysisData.whaleAccumulation === 'MASSIVE' || analysisData.whaleAccumulation === 'HEAVY' 
+                                  ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 shadow-[0_0_10px_rgba(16,185,129,0.15)] animate-pulse' 
+                                  : analysisData.whaleAccumulation === 'EXITING'
+                                  ? 'bg-rose-500/10 text-rose-400 border-rose-500/20 shadow-[0_0_10px_rgba(244,63,94,0.15)] animate-pulse'
+                                  : 'bg-surface-variant/40 text-on-surface-variant border-outline-variant/20'
+                              }`}>
+                                {analysisData.whaleAccumulation}
+                              </span>
+                            </div>
+                            <div className="space-y-1">
+                              <span className="font-label-caps text-[9px] text-outline block uppercase tracking-wider">Retail Bias</span>
+                              <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-black border uppercase tracking-wider ${
+                                analysisData.retailInterest === 'FOMO' || analysisData.retailInterest === 'STRONG'
+                                  ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 shadow-[0_0_10px_rgba(16,185,129,0.15)]'
+                                  : analysisData.retailInterest === 'PANIC' || analysisData.retailInterest === 'FEAR'
+                                  ? 'bg-rose-500/10 text-rose-400 border-rose-500/20 shadow-[0_0_10px_rgba(244,63,94,0.15)]'
+                                  : 'bg-surface-variant/40 text-on-surface-variant border-outline-variant/20'
+                              }`}>
+                                {analysisData.retailInterest}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
                       <div className="bg-surface-container-high/60 backdrop-blur-md rounded-2xl p-6 border border-outline-variant/20 shadow-xl">
                         <h6 className="font-label-caps text-[10px] text-outline mb-4 uppercase tracking-[0.2em] font-black">Related Entities</h6>
                         <div className="flex flex-wrap gap-2">

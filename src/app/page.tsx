@@ -8,7 +8,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 
-export default function Home() {
+function HomeContent() {
   const searchParams = useSearchParams();
   const category = searchParams.get("category") || "all";
   const q = searchParams.get("q") || "";
@@ -481,5 +481,18 @@ export default function Home() {
         </section>
       </div>
     </div>
+  );
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={
+      <div className="flex-1 flex flex-col items-center justify-center text-on-surface-variant opacity-50 space-y-4 py-20 bg-background h-screen">
+        <span className="material-symbols-outlined text-[48px] animate-spin text-secondary">sync</span>
+        <p className="font-label-caps text-xs tracking-widest uppercase">Initializing Tactical Command Center...</p>
+      </div>
+    }>
+      <HomeContent />
+    </Suspense>
   );
 }

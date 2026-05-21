@@ -70,10 +70,14 @@ export default function IntelligenceMap({ articleImage }: IntelligenceMapProps) 
           <motion.img 
             key={articleImage || "default-map"}
             initial={{ opacity: 0 }}
-            animate={{ opacity: 0.12 }}
+            animate={{ opacity: articleImage ? 0.22 : 0.12 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.5 }}
-            className="w-full h-full object-cover mix-blend-luminosity grayscale scale-110 select-none group-hover:scale-105 transition-transform duration-[10s] ease-linear" 
+            className={`w-full h-full object-cover select-none ${
+              articleImage 
+                ? "" 
+                : "mix-blend-luminosity grayscale scale-110 group-hover:scale-105 transition-transform duration-[10s] ease-linear"
+            }`}
             src={articleImage || "https://lh3.googleusercontent.com/aida-public/AB6AXuBlX9QL44iOsrYn7ZYt74wuGUvDVo5h1Ut1KL45WpGva1g2fBT118CW_9gCs4Y_rAMtLTQuYPQTDYabi8QiDuKF47knsQXNc4ivwiTcmGXZ7a22KVuCavCSZkdCW9kPVgPuB_lRh6X_zgfQpn27UtzI48FXsoYeLeQEcs-wjBSPIV9qSr6gGa4O2nehGj-Jzl2xwSf7pc1i7TO7hYujczm035YCjQfJp-FpNIUoGPPEW_QF5EcqHZS0MLglrRBnEtxMPX9LtEIYtFw"}
             alt="Intelligence Background"
           />

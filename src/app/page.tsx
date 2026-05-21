@@ -229,7 +229,7 @@ export default function Home() {
                 exit={{ opacity: 0 }}
                 className="w-full h-full"
               >
-                <IntelligenceMap />
+                <IntelligenceMap articleImage={selectedArticle?.imageUrl} />
               </motion.div>
             ) : (
               <motion.div 

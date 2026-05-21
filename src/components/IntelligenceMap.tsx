@@ -1,9 +1,13 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useState } from "react";
 
-export default function IntelligenceMap() {
+interface IntelligenceMapProps {
+  articleImage?: string;
+}
+
+export default function IntelligenceMap({ articleImage }: IntelligenceMapProps) {
   const [prices, setPrices] = useState({
     btc: { usd: 68241, change: 2.4 },
     eth: { usd: 3412, change: 1.8 }
@@ -60,13 +64,20 @@ export default function IntelligenceMap() {
 
   return (
     <div className="relative h-full w-full bg-background overflow-hidden border-b border-outline-variant/20 group">
-      {/* Background Map Image (Stylized) */}
+      {/* Background Map / Article Thumbnail (Stylized) */}
       <div className="absolute inset-0 bg-background overflow-hidden pointer-events-none">
-        <img 
-          className="w-full h-full object-cover opacity-10 mix-blend-luminosity grayscale scale-110 select-none group-hover:scale-105 transition-transform duration-[10s] ease-linear" 
-          src="https://lh3.googleusercontent.com/aida-public/AB6AXuBlX9QL44iOsrYn7ZYt74wuGUvDVo5h1Ut1KL45WpGva1g2fBT118CW_9gCs4Y_rAMtLTQuYPQTDYabi8QiDuKF47knsQXNc4ivwiTcmGXZ7a22KVuCavCSZkdCW9kPVgPuB_lRh6X_zgfQpn27UtzI48FXsoYeLeQEcs-wjBSPIV9qSr6gGa4O2nehGj-Jzl2xwSf7pc1i7TO7hYujczm035YCjQfJp-FpNIUoGPPEW_QF5EcqHZS0MLglrRBnEtxMPX9LtEIYtFw"
-          alt="Intelligence Map Background"
-        />
+        <AnimatePresence mode="wait">
+          <motion.img 
+            key={articleImage || "default-map"}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 0.12 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.5 }}
+            className="w-full h-full object-cover mix-blend-luminosity grayscale scale-110 select-none group-hover:scale-105 transition-transform duration-[10s] ease-linear" 
+            src={articleImage || "https://lh3.googleusercontent.com/aida-public/AB6AXuBlX9QL44iOsrYn7ZYt74wuGUvDVo5h1Ut1KL45WpGva1g2fBT118CW_9gCs4Y_rAMtLTQuYPQTDYabi8QiDuKF47knsQXNc4ivwiTcmGXZ7a22KVuCavCSZkdCW9kPVgPuB_lRh6X_zgfQpn27UtzI48FXsoYeLeQEcs-wjBSPIV9qSr6gGa4O2nehGj-Jzl2xwSf7pc1i7TO7hYujczm035YCjQfJp-FpNIUoGPPEW_QF5EcqHZS0MLglrRBnEtxMPX9LtEIYtFw"}
+            alt="Intelligence Background"
+          />
+        </AnimatePresence>
         {/* Scanline Effect */}
         <div className="absolute inset-0 bg-[linear-gradient(to_bottom,transparent_50%,rgba(0,0,0,0.2)_50%)] bg-[length:100%_4px] pointer-events-none"></div>
         <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-background opacity-60"></div>

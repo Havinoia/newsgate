@@ -29,8 +29,8 @@ export async function getNewsArticles(params: GetArticlesParams) {
 
         // Handle Sorting & Filtering
         if (sortBy === "impact") {
-            // High Impact is defined as news affecting market > 50%
-            dbQuery = dbQuery.gte('sentiment_score', 50)
+            // High Impact is defined as news affecting market >= 70% (aligning with UI HIGH IMPACT label)
+            dbQuery = dbQuery.gte('sentiment_score', 70)
                              .order('sentiment_score', { ascending: false })
                              .order('published_at', { ascending: false });
         } else if (sortBy === "oldest") {

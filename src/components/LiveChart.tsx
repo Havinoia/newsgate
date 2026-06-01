@@ -1,30 +1,29 @@
 "use client";
-
+ 
 import { useEffect, useRef } from 'react';
-
+ 
 declare global {
   interface Window {
     TradingView: any;
   }
 }
 
-export default function LiveChart() {
+interface LiveChartProps {
+  symbol?: string;
+}
+ 
+export default function LiveChart({ symbol = "BINANCE:BTCUSDT" }: LiveChartProps) {
   const container = useRef<HTMLDivElement>(null);
-  const isInitialized = useRef(false);
-
+ 
   useEffect(() => {
-    // Jika sudah diinisialisasi, jangan buat lagi
-    if (isInitialized.current) return;
-
-    const script = document.createElement("script");
-    script.src = "https://s3.tradingview.com/tv.js";
-    script.type = "text/javascript";
-    script.async = true;
-    script.onload = () => {
-      if (typeof window.TradingView !== 'undefined' && container.current && !isInitialized.current) {
+    const initWidget = () => {
+      if (typeof window.TradingView !== 'undefined' && container.current) {
+        // Clear previous widget and setup inner container for new symbol
+        container.current.innerHTML = '<div id="tradingview_full_chart_inner" class="w-full h-full" />';
+        
         new window.TradingView.widget({
           "autosize": true,
-          "symbol": "BINANCE:BTCUSDT",
+          "symbol": symbol,
           "interval": "60",
           "timezone": "Etc/UTC",
           "theme": "dark",
@@ -33,7 +32,7 @@ export default function LiveChart() {
           "toolbar_bg": "#131316",
           "enable_publishing": false,
           "allow_symbol_change": true,
-          "container_id": "tradingview_full_chart",
+          "container_id": "tradingview_full_chart_inner",
           "withdateranges": true,
           "hide_side_toolbar": false,
           "hide_volume": true,
@@ -46,22 +45,27 @@ export default function LiveChart() {
           "backgroundColor": "#131316",
           "gridColor": "rgba(43, 43, 67, 0.1)"
         });
-        isInitialized.current = true;
       }
     };
-
-    document.head.appendChild(script);
-
+ 
+    if (typeof window.TradingView !== 'undefined') {
+      initWidget();
+    } else {
+      const script = document.createElement("script");
+      script.src = "https://s3.tradingview.com/tv.js";
+      script.type = "text/javascript";
+      script.async = true;
+      script.onload = initWidget;
+      document.head.appendChild(script);
+    }
+ 
     return () => {
-      // Kita tidak menghapus script agar tidak lambat saat buka-tutup map/chart
-      // Tapi kita bersihkan container
       if (container.current) {
         container.current.innerHTML = '';
       }
-      isInitialized.current = false;
     };
-  }, []);
-
+  }, [symbol]);
+ 
   return (
     <div className="w-full h-full bg-[#131316] relative flex flex-col">
       <div id="tradingview_full_chart" ref={container} className="w-full h-full z-10" />

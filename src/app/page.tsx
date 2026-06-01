@@ -15,13 +15,13 @@ function HomeContent() {
     if (!input) return "BINANCE:BTCUSDT";
     const upper = input.toUpperCase().trim();
     
-    if (upper === "BTCUSD" || upper === "BTCUSDT" || upper === "BTC") return "BINANCE:BTCUSDT";
-    if (upper === "ETHUSD" || upper === "ETHUSDT" || upper === "ETH") return "BINANCE:ETHUSDT";
-    if (upper === "SOLUSD" || upper === "SOLUSDT" || upper === "SOL") return "BINANCE:SOLUSDT";
-    if (upper === "AAPL") return "NASDAQ:AAPL";
-    if (upper === "TSLA") return "NASDAQ:TSLA";
-    if (upper === "SPY") return "AMEX:SPY";
-    if (upper === "GOLD" || upper === "XAUUSD") return "OANDA:XAUUSD";
+    if (upper === "BTCUSD" || upper === "BTCUSDT" || upper === "BTC" || upper === "BITCOIN") return "BINANCE:BTCUSDT";
+    if (upper === "ETHUSD" || upper === "ETHUSDT" || upper === "ETH" || upper === "ETHEREUM") return "BINANCE:ETHUSDT";
+    if (upper === "SOLUSD" || upper === "SOLUSDT" || upper === "SOL" || upper === "SOLANA") return "BINANCE:SOLUSDT";
+    if (upper === "AAPL" || upper === "APPLE") return "NASDAQ:AAPL";
+    if (upper === "TSLA" || upper === "TESLA") return "NASDAQ:TSLA";
+    if (upper === "SPY" || upper === "S&P 500" || upper === "S&P500") return "AMEX:SPY";
+    if (upper === "GOLD" || upper === "XAUUSD" || upper === "SPOT") return "OANDA:XAUUSD";
     if (upper === "BRENT" || upper === "UKOIL") return "TVC:UKOIL";
     
     if (upper.includes(":")) return upper;

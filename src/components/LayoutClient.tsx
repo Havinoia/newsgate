@@ -1,82 +1,103 @@
 "use client";
  
 import Navbar from "@/components/Navbar";
+import Sidebar from "@/components/Sidebar";
 import Link from "next/link";
+import { useQuery } from "@tanstack/react-query";
+import { getNewsArticles } from "@/actions/news";
+import { useSidebar } from "@/components/Providers";
  
 export default function LayoutClient({ children }: { children: React.ReactNode }) {
-  // Dynamic mock stock/crypto data and flash messages for ticker
-  const tickerItems = [
-    { text: "BREAKING ALERT: SECURE TRANSACTION CHANNELS REGISTERING INSTITUTIONAL ORDERS", isAlert: true },
-    { text: "BTC/USD $68,241.50 (+2.40%)", isAlert: false },
-    { text: "ETH/USD $3,412.20 (+1.80%)", isAlert: false },
-    { text: "BRENT CRUDE OIL $82.40 (+1.15%)", isAlert: false },
-    { text: "US 10Y BOND YIELD 4.32% (-0.05%)", isAlert: false },
-    { text: "SIGNAL FLASH: BLOCKORDER CVD DESKS INITIATING MASSIVE WHALE CORRIDOR ACCUMULATION", isAlert: true },
-    { text: "SUEZ TRANSIT FLOWS DECREASE 12.4% WEEK-ON-WEEK FOLLOWING SHIP ROUTE HIGHLIGHTS", isAlert: true },
-    { text: "MACRO SYNTHESIS PROTOCOL INDICATES STRUCTURAL SAFETY POSTURES IN CRYPTO ASSETS", isAlert: false }
+  const { isSidebarCollapsed } = useSidebar();
+
+  // Fetch recent news for the ticker marquee
+  const { data: tickerArticles } = useQuery({
+    queryKey: ["ticker-news"],
+    queryFn: async () => {
+      const res = await getNewsArticles({ limit: 10, sortBy: "latest" });
+      if (res.success) return res.data;
+      return [];
+    },
+    refetchInterval: 15000,
+  });
+
+  const defaultTickerItems = [
+    { title: "KONEKTIVITAS STREAM REALTIME TERHUBUNG KE SUPABASE NEWS article NODE", isAlert: true },
+    { title: "Laporan Pasar Global: Pergerakan Sektor Teknologi Menunjukkan Tren Positif", isAlert: false },
+    { title: "Analisis Sentimen Kecerdasan Buatan Memindai Berita Berdampak Tinggi", isAlert: false },
+    { title: "Perkembangan Kebijakan Energi Terbarukan Menjadi Sorotan Internasional", isAlert: true }
   ];
- 
-  // Repeat items to fill marquee seamlessly
-  const scrolledTickerItems = [...tickerItems, ...tickerItems];
- 
+
+  const itemsToDisplay = (tickerArticles && tickerArticles.length > 0)
+    ? tickerArticles.map((art: any) => ({
+        title: art.title,
+        isAlert: art.sentimentScore >= 70
+      }))
+    : defaultTickerItems;
+
+  const scrolledTickerItems = [...itemsToDisplay, ...itemsToDisplay];
+
   return (
     <>
       <Navbar />
- 
-      {/* For full-screen TradingView terminal, sidebar is removed and ml-0 is forced */}
-      <main className="pt-16 h-screen flex flex-col overflow-hidden transition-all duration-300 ease-in-out lg:ml-0">
-        
+      <Sidebar />
+
+      {/* Main Container adjusting for Sidebar width */}
+      <main 
+        className={`pt-16 min-h-screen flex flex-col transition-all duration-300 ease-in-out ${
+          isSidebarCollapsed ? "lg:ml-0" : "lg:ml-64"
+        }`}
+      >
         {/* Primary Page Content Wrapper */}
-        <div className="flex-1 flex flex-col overflow-hidden bg-background">
+        <div className="flex-1 flex flex-col bg-background">
           {children}
         </div>
- 
+
         {/* Cinematic Horizontally Scrolling News Flash Ticker */}
-        <div className="h-8 bg-surface-container-lowest/80 border-t border-outline-variant/15 flex items-center overflow-hidden z-40 select-none relative shadow-[0_-4px_24px_rgba(0,0,0,0.4)] shrink-0">
-          {/* Static Alert Prefix Badge */}
-          <div className="h-full px-4 bg-secondary text-on-secondary flex items-center gap-1.5 font-label-caps text-[9px] font-black tracking-[0.2em] z-50 shadow-[6px_0_15px_rgba(0,0,0,0.6)] shrink-0">
-            <span className="w-1.5 h-1.5 rounded-full bg-error animate-ping" />
-            <span className="text-glow">GLOBAL MARKET TAPE</span>
+        <div className="h-9 bg-surface-container-lowest/90 border-t border-outline-variant/20 flex items-center overflow-hidden z-40 select-none relative shadow-[0_-4px_24px_rgba(0,0,0,0.4)] shrink-0 sticky bottom-10">
+          <div className="h-full px-4 bg-secondary text-on-secondary flex items-center gap-1.5 font-label-caps text-[10px] font-black tracking-widest z-50 shadow-[6px_0_15px_rgba(0,0,0,0.6)] shrink-0">
+            <span className="w-2 h-2 rounded-full bg-error animate-ping" />
+            <span className="text-glow uppercase">TICKER BERITA TERKINI</span>
           </div>
- 
-          {/* Marquee Scroller Wrapper */}
-          <div className="flex gap-14 items-center animate-marquee whitespace-nowrap pr-14 select-none">
+
+          <div className="flex gap-12 items-center animate-marquee whitespace-nowrap pr-12 select-none">
             {scrolledTickerItems.map((item, idx) => (
               <div 
                 key={idx} 
-                className="flex items-center gap-2 text-[9px] font-label-caps tracking-wider"
+                className="flex items-center gap-2 text-[10px] font-label-caps tracking-wider"
               >
                 {item.isAlert ? (
                   <>
-                    <span className="text-error font-black px-1.5 py-0.5 rounded bg-error/15 border border-error/25 animate-pulse text-glow" style={{ color: "var(--color-error)" }}>
-                      ALERT
+                    <span className="text-error font-black px-1.5 py-0.5 rounded bg-error/15 border border-error/25 animate-pulse text-glow uppercase" style={{ color: "var(--color-error)" }}>
+                      HIGH IMPACT
                     </span>
-                    <span className="text-on-surface font-bold uppercase">{item.text}</span>
+                    <span className="text-on-surface font-bold uppercase">{item.title}</span>
                   </>
                 ) : (
                   <>
-                    <span className="w-1 h-1 bg-secondary rounded-full" />
-                    <span className="text-on-surface-variant font-medium uppercase">{item.text}</span>
+                    <span className="w-1.5 h-1.5 bg-secondary rounded-full" />
+                    <span className="text-on-surface-variant font-medium uppercase">{item.title}</span>
                   </>
                 )}
               </div>
             ))}
           </div>
         </div>
- 
-        {/* Terminal Footer */}
-        <footer className="w-full h-10 bg-surface-container-lowest border-t border-outline-variant/15 px-6 flex items-center justify-between z-50 shrink-0 select-none">
-          <div className="flex items-center gap-4 text-label-caps text-[9px] text-on-surface-variant font-label-caps font-bold">
-            <span>SYSTEM STATUS: <span className="text-secondary text-glow" style={{ color: "var(--color-secondary)" }}>OPTIMAL</span></span>
-            <span className="w-1.5 h-1.5 bg-outline-variant/20 rounded-full"></span>
-            <span>SECURE LATENCY: <span className="text-secondary text-glow" style={{ color: "var(--color-secondary)" }}>18MS</span></span>
-            <span className="w-1.5 h-1.5 bg-outline-variant/20 rounded-full"></span>
-            <span className="uppercase tracking-widest text-[8px] opacity-60">© 2026 NEWSGATE TERMINAL. ULTRA-LOW FEED SHUTTLE PROTOCOL.</span>
+
+        {/* News Portal Footer */}
+        <footer className="w-full bg-surface-container-lowest border-t border-outline-variant/15 px-6 py-3 flex flex-col md:flex-row items-center justify-between z-50 shrink-0 select-none gap-3">
+          <div className="flex items-center gap-4 text-label-caps text-[10px] text-on-surface-variant font-label-caps font-bold">
+            <span>STATUS SYNC: <span className="text-secondary text-glow font-black" style={{ color: "var(--color-secondary)" }}>AKTIF</span></span>
+            <span className="w-1.5 h-1.5 bg-outline-variant/30 rounded-full"></span>
+            <span>SUMBER: <span className="text-secondary font-black">MULTI-FEED AGGREGATOR</span></span>
+            <span className="w-1.5 h-1.5 bg-outline-variant/30 rounded-full"></span>
+            <span className="uppercase tracking-widest text-[9px] opacity-70">© 2026 NEWSGATE. PORTAL MONITORING BERITA REALTIME.</span>
           </div>
-          <div className="flex items-center gap-5 text-[8px] font-label-caps font-black tracking-widest">
-            <Link className="text-on-surface-variant hover:text-secondary transition-colors" href="#">API ACCESS</Link>
-            <Link className="text-on-surface-variant hover:text-secondary transition-colors" href="#">NODE NETWORK</Link>
-            <Link className="text-on-surface-variant hover:text-secondary transition-colors" href="#">INSTITUTIONAL</Link>
+          <div className="flex items-center gap-5 text-[9px] font-label-caps font-black tracking-widest">
+            <Link className="text-on-surface-variant hover:text-secondary transition-colors" href="/">BERANDA</Link>
+            <Link className="text-on-surface-variant hover:text-secondary transition-colors" href="/?sort=impact">HIGH IMPACT</Link>
+            <Link className="text-on-surface-variant hover:text-secondary transition-colors" href="/?category=crypto">KRIPTO</Link>
+            <Link className="text-on-surface-variant hover:text-secondary transition-colors" href="/?category=politics">POLITIK</Link>
           </div>
         </footer>
       </main>
